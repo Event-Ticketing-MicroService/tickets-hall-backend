@@ -1,8 +1,105 @@
 services:
 
-  # Add your microservice Dockerfile here
+  attendance:
+    build:
+      context: ./tickets-hall
+      dockerfile: attendance/Dockerfile
+    ports:
+      - "8081:8080"
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+    networks:
+      - tickets-hall-network
+    restart: unless-stopped
+
+  customers:
+    build:
+      context: ./tickets-hall
+      dockerfile: customers/Dockerfile
+    ports:
+      - "8082:8080"
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+    networks:
+      - tickets-hall-network
+    restart: unless-stopped
+
+  events:
+    build:
+      context: ./tickets-hall
+      dockerfile: events/Dockerfile
+    ports:
+      - "8083:8080"
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+    networks:
+      - tickets-hall-network
+    restart: unless-stopped
+
+  notification:
+    build:
+      context: ./tickets-hall
+      dockerfile: notification/Dockerfile
+    ports:
+      - "8084:8080"
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+    networks:
+      - tickets-hall-network
+    restart: unless-stopped
+
+  payments:
+    build:
+      context: ./tickets-hall
+      dockerfile: payments/Dockerfile
+    ports:
+      - "8085:8080"
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+    networks:
+      - tickets-hall-network
+    restart: unless-stopped
+
+  tickets:
+    build:
+      context: ./tickets-hall
+      dockerfile: tickets/Dockerfile
+    ports:
+      - "8086:8080"
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+    networks:
+      - tickets-hall-network
+    restart: unless-stopped
+
+  venues:
+    build:
+      context: ./tickets-hall
+      dockerfile: venues/Dockerfile
+    ports:
+      - "8087:8080"
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+    networks:
+      - tickets-hall-network
+    restart: unless-stopped
 
   postgres:
+    container_name: tickets-hall_postgres
     image: postgres:17.6
     ports:
       - "5432:5432"
@@ -15,6 +112,7 @@ services:
       - tickets-hall-network
 
   redis:
+    container_name: tickets-hall_redis
     image: redis:7-alpine
     ports:
       - "6379:6379"
@@ -25,6 +123,7 @@ services:
       - tickets-hall-network
 
   mailpit:
+    container_name: tickets-hall_mailpit
     image: axllent/mailpit:latest
     ports:
       - "25:1025"
@@ -35,7 +134,7 @@ services:
 
   pgadmin:
     image: dpage/pgadmin4:latest
-    container_name: pgadmin
+    container_name: tickets-hall_pgadmin
     environment:
       - PGADMIN_DEFAULT_EMAIL=admin@admin.com
       - PGADMIN_DEFAULT_PASSWORD=admin
@@ -51,7 +150,7 @@ services:
 
   rabbitmq:
     image: rabbitmq:3-management-alpine
-    container_name: rabbitmq_server
+    container_name: tickets-hall_rabbitmq
     ports:
       - "5672:5672" 
       - "15672:15672"
