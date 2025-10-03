@@ -41,84 +41,77 @@ public class RabbitConfig {
     @Value("${app.rabbitmq.routing.ticketCreated}")
     private String ticketCreatedRoutingKey;
 
-    @Value("${app.rabbitmq.queues.ticketCreated.name}")
+    @Value("${app.rabbitmq.queues.ticketCreated}")
     private String ticketCreatedQueueName;
 
-    @Value("${app.rabbitmq.exchanges.ticketRetry}")
-    private String ticketRetryExchangeName;
+//    @Value("${app.rabbitmq.exchanges.ticketRetry}")
+//    private String ticketRetryExchangeName;
 
-    @Bean("userExchange")
+    @Bean
     DirectExchange userExchange() {
         return new DirectExchange(userExchangeName);
     }
 
-    @Bean("userCreatedQueue")
+    @Bean
     Queue userCreatedQueue() {
-        return QueueBuilder.durable(userCreatedQueueName).build();
+        return new Queue(userCreatedQueueName, true);
     }
 
     @Bean
-    Binding userCreatedBinding(@Qualifier("userCreatedQueue") Queue userCreatedQueue,
-            @Qualifier("userExchange") DirectExchange userExchange) {
+    Binding userCreatedBinding() {
         return BindingBuilder
-                .bind(userCreatedQueue)
-                .to(userExchange)
+                .bind(userCreatedQueue())
+                .to(userExchange())
                 .with(userCreatedRoutingKey);
     }
 
-    @Bean("eventExchange")
+    @Bean
     DirectExchange eventExchange() {
         return new DirectExchange(eventExchangeName);
     }
 
-    @Bean("eventCreatedQueue")
+    @Bean
     Queue eventCreatedQueue() {
-        return QueueBuilder.durable(eventCreatedQueueName).build();
+        return new Queue(eventCreatedQueueName, true);
     }
 
     @Bean
-    Binding eventCreatedBinding(@Qualifier("eventCreatedQueue") Queue eventCreatedQueue,
-            @Qualifier("eventExchange") DirectExchange eventExchange) {
+    Binding eventCreatedBinding() {
         return BindingBuilder
-                .bind(eventCreatedQueue)
-                .to(eventExchange)
+                .bind(eventCreatedQueue())
+                .to(eventExchange())
                 .with(eventCreatedRoutingKey);
     }
 
-    @Bean("ticketExchange")
+    @Bean
     DirectExchange ticketExchange() {
         return new DirectExchange(ticketExchangeName);
     }
 
-    @Bean("ticketRetryExchange")
-    DirectExchange ticketRetryExchange() {
-        return new DirectExchange(ticketRetryExchangeName);
-    }
+//    @Bean("ticketRetryExchange")
+//    DirectExchange ticketRetryExchange() {
+//        return new DirectExchange(ticketRetryExchangeName);
+//    }
 
-    @Bean("ticketCreatedQueue")
+    @Bean
     Queue ticketCreatedQueue() {
-        return QueueBuilder.durable(ticketCreatedQueueName)
-                .withArgument("x-dead-letter-exchange", ticketRetryExchangeName)
-                .withArgument("x-dead-letter-routing-key", ticketCreatedRoutingKey)
-                .withArgument("x-message-ttl", 5000) // retry after 5 seconds
-                .build();
+        return new Queue(ticketCreatedQueueName, true);
     }
 
     @Bean
-    Binding ticketCreatedBinding(@Qualifier("ticketCreatedQueue") Queue ticketCreatedQueue,
-            @Qualifier("ticketExchange") DirectExchange ticketExchange) {
-        return BindingBuilder.bind(ticketCreatedQueue)
-                .to(ticketExchange)
+    Binding ticketCreatedBinding() {
+        return BindingBuilder.bind(ticketCreatedQueue())
+                .to(ticketExchange())
                 .with(ticketCreatedRoutingKey);
     }
 
-    @Bean
-    Binding ticketRetryBinding(@Qualifier("ticketCreatedQueue") Queue ticketCreatedQueue,
-            @Qualifier("ticketRetryExchange") DirectExchange ticketRetryExchange) {
-        return BindingBuilder.bind(ticketCreatedQueue)
-                .to(ticketRetryExchange)
-                .with(ticketCreatedRoutingKey);
-    }
+//    @Bean
+//    Binding ticketRetryBinding(@Qualifier("ticketCreatedQueue") Queue ticketCreatedQueue,
+//            @Qualifier("ticketRetryExchange") DirectExchange ticketRetryExchange) {
+//        return BindingBuilder.bind(ticketCreatedQueue)
+//                .to(ticketRetryExchange)
+//                .with(ticketCreatedRoutingKey);
+//    }
 
     @Bean
     MessageConverter jsonMessageConverter() {
@@ -126,9 +119,9 @@ public class RabbitConfig {
     }
 
     @Bean
-    RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory, MessageConverter converter) {
+    RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
         RabbitTemplate template = new RabbitTemplate(connectionFactory);
-        template.setMessageConverter(converter);
+        template.setMessageConverter(jsonMessageConverter());
         return template;
     }
 }

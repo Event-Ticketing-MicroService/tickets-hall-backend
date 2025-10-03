@@ -46,3 +46,5 @@ pgadmin_data
 *.py
 requirements.txt
 *.ps1
+
+.venv

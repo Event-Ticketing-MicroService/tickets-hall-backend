@@ -18,7 +18,6 @@ import lombok.NoArgsConstructor;
 public final class Attendee {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
     
     @Column(nullable = false)

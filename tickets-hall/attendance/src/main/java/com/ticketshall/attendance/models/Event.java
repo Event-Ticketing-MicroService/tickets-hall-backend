@@ -19,7 +19,6 @@ import lombok.NoArgsConstructor;
 @Builder
 public final class Event {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
     @Column(nullable = false)

@@ -1,5 +1,6 @@
 package com.ticketshall.attendance.services;
 
+import jakarta.transaction.Transactional;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +26,7 @@ public class Consumer {
     private final EventRepository eventRepository;
 
     @RabbitListener(queues = "${app.rabbitmq.queues.userCreated}")
+    @Transactional
     public void handleUserCreated(UserCreatedEvent event) {
         try {
             log.info("Processing UserCreatedEvent: {}", event);
@@ -37,7 +39,9 @@ public class Consumer {
         }
     }
 
+
     @RabbitListener(queues = "${app.rabbitmq.queues.eventCreated}")
+    @Transactional
     public void handleEventCreated(EventCreatedEvent event) {
         try {
             log.info("Processing EventCreatedEvent: {}", event);
@@ -55,7 +59,8 @@ public class Consumer {
         }
     }
 
-    @RabbitListener(queues = "${app.rabbitmq.queues.ticketCreated.name}")
+    @RabbitListener(queues = "${app.rabbitmq.queues.ticketCreated}")
+    @Transactional
     public void handleTicketCreated(TicketCreatedEvent event) {
         try {
             log.info("Processing TicketCreatedEvent: {}", event);
