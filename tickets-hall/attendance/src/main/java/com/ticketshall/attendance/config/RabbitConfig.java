@@ -4,12 +4,10 @@ import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.DirectExchange;
 import org.springframework.amqp.core.Queue;
-import org.springframework.amqp.core.QueueBuilder;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -43,9 +41,6 @@ public class RabbitConfig {
 
     @Value("${app.rabbitmq.queues.ticketCreated}")
     private String ticketCreatedQueueName;
-
-//    @Value("${app.rabbitmq.exchanges.ticketRetry}")
-//    private String ticketRetryExchangeName;
 
     @Bean
     DirectExchange userExchange() {
@@ -88,11 +83,6 @@ public class RabbitConfig {
         return new DirectExchange(ticketExchangeName);
     }
 
-//    @Bean("ticketRetryExchange")
-//    DirectExchange ticketRetryExchange() {
-//        return new DirectExchange(ticketRetryExchangeName);
-//    }
-
     @Bean
     Queue ticketCreatedQueue() {
         return new Queue(ticketCreatedQueueName, true);
@@ -104,14 +94,6 @@ public class RabbitConfig {
                 .to(ticketExchange())
                 .with(ticketCreatedRoutingKey);
     }
-
-//    @Bean
-//    Binding ticketRetryBinding(@Qualifier("ticketCreatedQueue") Queue ticketCreatedQueue,
-//            @Qualifier("ticketRetryExchange") DirectExchange ticketRetryExchange) {
-//        return BindingBuilder.bind(ticketCreatedQueue)
-//                .to(ticketRetryExchange)
-//                .with(ticketCreatedRoutingKey);
-//    }
 
     @Bean
     MessageConverter jsonMessageConverter() {
