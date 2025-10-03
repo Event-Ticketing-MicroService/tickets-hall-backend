@@ -34,7 +34,7 @@ public class Consumer {
             attendeeRepository.save(attendee);
             log.info("Successfully created attendee with ID: {}", event.id());
         } catch (Exception e) {
-            log.error("Error processing UserCreatedEvent: {}", event, e);
+            log.error("Error processing UserCreatedEvent: {}", event, e.getMessage());
             throw e;
         }
     }
@@ -48,13 +48,12 @@ public class Consumer {
             log.debug("Event details - ID: {}, Title: {}, Location: {}, Start: {}, End: {}", 
                      event.id(), event.title(), event.location(), event.startsAtUTc(), event.endsAtUtc());
             
-            Event createdEvent = new Event(event.id(), event.title(), event.description(), 
-                                         event.location(), event.startsAtUTc(), event.endsAtUtc());
+            Event createdEvent = new Event(event.id(), event.title(), event.description(), event.location(), event.startsAtUTc(), event.endsAtUtc());
             
             eventRepository.save(createdEvent);
             log.info("Successfully created event with ID: {}", event.id());
         } catch (Exception e) {
-            log.error("Error processing EventCreatedEvent: {}", event, e);
+            log.error("Error processing EventCreatedEvent: {}", event, e.getMessage());
             throw e;
         }
     }
@@ -76,12 +75,13 @@ public class Consumer {
                 .id(event.id())
                 .attendee(attendee)
                 .event(ticketEvent)
+                .code(event.code())
                 .build();
 
             ticketRepository.save(ticket);
             log.info("Successfully created ticket with ID: {}", event.id());
         } catch (Exception e) {
-            log.error("Error processing TicketCreatedEvent: {}", event, e);
+            log.error("Error processing TicketCreatedEvent: {}", event, e.getMessage());
             throw e;
         }
     }
