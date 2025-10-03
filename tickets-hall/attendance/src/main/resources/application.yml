@@ -12,7 +12,7 @@ spring:
   # JPA/Hibernate Configuration
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update
     show-sql: true
     properties:
       hibernate:
@@ -32,4 +32,44 @@ spring:
     port: 5672
     username: admin
     password: admin
+
+# Application-specific RabbitMQ Configuration
+app:
+  rabbitmq:
+    exchanges:
+      user: user.exchange
+      event: event.exchange
+      ticket: ticket.exchange
+      ticketRetry: ticket.retry.exchange
+    routing:
+      userCreated: user.created
+      eventCreated: event.created
+      ticketCreated: ticket.created
+    queues:
+      userCreated: user.created.queue
+      eventCreated: event.created.queue
+      ticketCreated:
+        name: ticket.created.queue
+        durable: true
+        arguments:
+          x-dead-letter-exchange: ticket.retry.exchange
+          x-dead-letter-routing-key: ticket.created
+          x-message-ttl: 5000  # retry after 5 seconds
+    bindings:
+      - destination: user.created.queue
+        destinationType: queue
+        exchange: user.exchange
+        routingKey: user.created
+      - destination: event.created.queue
+        destinationType: queue
+        exchange: event.exchange
+        routingKey: event.created
+      - destination: ticket.created.queue
+        destinationType: queue
+        exchange: ticket.exchange
+        routingKey: ticket.created
+      - destination: ticket.created.queue
+        destinationType: queue
+        exchange: ticket.retry.exchange
+        routingKey: ticket.created
 
