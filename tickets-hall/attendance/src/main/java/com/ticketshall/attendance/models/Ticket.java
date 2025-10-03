@@ -28,7 +28,7 @@ public class Ticket {
     @Column(nullable = false)
     private String code;
 
-    private LocalDateTime usedAtUtc;
+    private LocalDateTime usedAtUtc = null;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(nullable = false)
