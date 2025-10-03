@@ -42,3 +42,7 @@ postgres_data
 redis_data
 rabbitmq_data
 pgadmin_data
+
+*.py
+requirements.txt
+*.ps1
