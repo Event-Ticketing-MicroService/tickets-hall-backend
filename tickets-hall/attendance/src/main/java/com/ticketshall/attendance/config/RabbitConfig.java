@@ -1,9 +1,6 @@
 package com.ticketshall.attendance.config;
 
-import org.springframework.amqp.core.Binding;
-import org.springframework.amqp.core.BindingBuilder;
-import org.springframework.amqp.core.DirectExchange;
-import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
@@ -42,6 +39,15 @@ public class RabbitConfig {
     @Value("${app.rabbitmq.queues.ticketCreated}")
     private String ticketCreatedQueueName;
 
+    @Value("${app.rabbitmq.exchanges.dead-letter}")
+    private String deadLetterExchangeName;
+
+    @Value("${app.rabbitmq.routing.dead-letter}")
+    private String deadLetterRoutingKey;
+
+    @Value("${app.rabbitmq.queues.dead-letter}")
+    private String deadLetterQueueName;
+
     @Bean
     DirectExchange userExchange() {
         return new DirectExchange(userExchangeName);
@@ -49,13 +55,15 @@ public class RabbitConfig {
 
     @Bean
     Queue userCreatedQueue() {
-        return new Queue(userCreatedQueueName, true);
+        return QueueBuilder.durable(userCreatedQueueName)
+                .withArgument("x-dead-letter-exchange", deadLetterExchangeName)
+                .withArgument("x-dead-letter-routing-key", deadLetterRoutingKey)
+                .build();
     }
 
     @Bean
     Binding userCreatedBinding() {
-        return BindingBuilder
-                .bind(userCreatedQueue())
+        return BindingBuilder.bind(userCreatedQueue())
                 .to(userExchange())
                 .with(userCreatedRoutingKey);
     }
@@ -67,13 +75,15 @@ public class RabbitConfig {
 
     @Bean
     Queue eventCreatedQueue() {
-        return new Queue(eventCreatedQueueName, true);
+        return QueueBuilder.durable(eventCreatedQueueName)
+                .withArgument("x-dead-letter-exchange", deadLetterExchangeName)
+                .withArgument("x-dead-letter-routing-key", deadLetterRoutingKey)
+                .build();
     }
 
     @Bean
     Binding eventCreatedBinding() {
-        return BindingBuilder
-                .bind(eventCreatedQueue())
+        return BindingBuilder.bind(eventCreatedQueue())
                 .to(eventExchange())
                 .with(eventCreatedRoutingKey);
     }
@@ -85,7 +95,10 @@ public class RabbitConfig {
 
     @Bean
     Queue ticketCreatedQueue() {
-        return new Queue(ticketCreatedQueueName, true);
+        return QueueBuilder.durable(ticketCreatedQueueName)
+                .withArgument("x-dead-letter-exchange", deadLetterExchangeName)
+                .withArgument("x-dead-letter-routing-key", deadLetterRoutingKey)
+                .build();
     }
 
     @Bean
@@ -93,6 +106,24 @@ public class RabbitConfig {
         return BindingBuilder.bind(ticketCreatedQueue())
                 .to(ticketExchange())
                 .with(ticketCreatedRoutingKey);
+    }
+
+    // Final DLQ
+    @Bean
+    DirectExchange deadLetterExchange() {
+        return new DirectExchange(deadLetterExchangeName);
+    }
+
+    @Bean
+    Queue deadLetterQueue() {
+        return QueueBuilder.durable(deadLetterQueueName).build();
+    }
+
+    @Bean
+    Binding deadLetterBinding() {
+        return BindingBuilder.bind(deadLetterQueue())
+                .to(deadLetterExchange())
+                .with(deadLetterRoutingKey);
     }
 
     @Bean
