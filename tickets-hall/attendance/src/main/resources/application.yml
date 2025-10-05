@@ -53,11 +53,23 @@ app:
       dead-letter: deadLetter.exchange
     routing:
       userCreated: user.created
+      userUpdated: user.updated
+      userDeleted: user.deleted
       eventCreated: event.created
+      eventUpdated: event.updated
+      eventDeleted: event.deleted
       ticketCreated: ticket.created
+      ticketUpdated: ticket.updated
+      ticketDeleted: ticket.deleted
       dead-letter: dead.letter
     queues:
       userCreated: user.created.queue
+      userUpdated: user.updated.queue
+      userDeleted: user.deleted.queue
       eventCreated: event.created.queue
+      eventUpdated: event.updated.queue
+      eventDeleted: event.deleted.queue
       ticketCreated: ticket.created.queue
+      ticketUpdated: ticket.updated.queue
+      ticketDeleted: ticket.deleted.queue
       dead-letter: final.dead.letter.queue

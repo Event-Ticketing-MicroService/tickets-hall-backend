@@ -1,6 +1,7 @@
 package com.ticketshall.attendance.mapper;
 
 import com.ticketshall.attendance.events.TicketCreatedEvent;
+import com.ticketshall.attendance.events.TicketUpdatedEvent;
 import com.ticketshall.attendance.models.Ticket;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -11,6 +12,11 @@ public interface TicketMapper {
     @Mapping(target = "event", ignore = true)
     @Mapping(target = "usedAtUtc", constant = "null")
     Ticket toTicket(TicketCreatedEvent event);
+
+    @Mapping(target = "attendee", ignore = true)
+    @Mapping(target = "event", ignore = true)
+    @Mapping(target = "usedAtUtc", constant = "null")
+    Ticket toTicket(TicketUpdatedEvent event);
 
     @Mapping(source = "attendee.id", target = "userId")
     @Mapping(source = "event.id", target = "eventId")

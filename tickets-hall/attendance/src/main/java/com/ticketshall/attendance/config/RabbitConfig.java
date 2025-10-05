@@ -18,8 +18,20 @@ public class RabbitConfig {
     @Value("${app.rabbitmq.routing.userCreated}")
     private String userCreatedRoutingKey;
 
+    @Value("${app.rabbitmq.routing.userUpdated}")
+    private String userUpdatedRoutingKey;
+
+    @Value("${app.rabbitmq.routing.userDeleted}")
+    private String userDeletedRoutingKey;
+
     @Value("${app.rabbitmq.queues.userCreated}")
     private String userCreatedQueueName;
+
+    @Value("${app.rabbitmq.queues.userUpdated}")
+    private String userUpdatedQueueName;
+
+    @Value("${app.rabbitmq.queues.userDeleted}")
+    private String userDeletedQueueName;
 
     @Value("${app.rabbitmq.exchanges.event}")
     private String eventExchangeName;
@@ -27,8 +39,20 @@ public class RabbitConfig {
     @Value("${app.rabbitmq.routing.eventCreated}")
     private String eventCreatedRoutingKey;
 
+    @Value("${app.rabbitmq.routing.eventUpdated}")
+    private String eventUpdatedRoutingKey;
+
+    @Value("${app.rabbitmq.routing.eventDeleted}")
+    private String eventDeletedRoutingKey;
+
     @Value("${app.rabbitmq.queues.eventCreated}")
     private String eventCreatedQueueName;
+
+    @Value("${app.rabbitmq.queues.eventUpdated}")
+    private String eventUpdatedQueueName;
+
+    @Value("${app.rabbitmq.queues.eventDeleted}")
+    private String eventDeletedQueueName;
 
     @Value("${app.rabbitmq.exchanges.ticket}")
     private String ticketExchangeName;
@@ -36,8 +60,20 @@ public class RabbitConfig {
     @Value("${app.rabbitmq.routing.ticketCreated}")
     private String ticketCreatedRoutingKey;
 
+    @Value("${app.rabbitmq.routing.ticketUpdated}")
+    private String ticketUpdatedRoutingKey;
+
+    @Value("${app.rabbitmq.routing.ticketDeleted}")
+    private String ticketDeletedRoutingKey;
+
     @Value("${app.rabbitmq.queues.ticketCreated}")
     private String ticketCreatedQueueName;
+
+    @Value("${app.rabbitmq.queues.ticketUpdated}")
+    private String ticketUpdatedQueueName;
+
+    @Value("${app.rabbitmq.queues.ticketDeleted}")
+    private String ticketDeletedQueueName;
 
     @Value("${app.rabbitmq.exchanges.dead-letter}")
     private String deadLetterExchangeName;
@@ -69,6 +105,36 @@ public class RabbitConfig {
     }
 
     @Bean
+    Queue userUpdatedQueue() {
+        return QueueBuilder.durable(userUpdatedQueueName)
+                .withArgument("x-dead-letter-exchange", deadLetterExchangeName)
+                .withArgument("x-dead-letter-routing-key", deadLetterRoutingKey)
+                .build();
+    }
+
+    @Bean
+    Binding userUpdatedBinding() {
+        return BindingBuilder.bind(userUpdatedQueue())
+                .to(userExchange())
+                .with(userUpdatedRoutingKey);
+    }
+
+    @Bean
+    Queue userDeletedQueue() {
+        return QueueBuilder.durable(userDeletedQueueName)
+                .withArgument("x-dead-letter-exchange", deadLetterExchangeName)
+                .withArgument("x-dead-letter-routing-key", deadLetterRoutingKey)
+                .build();
+    }
+
+    @Bean
+    Binding userDeletedBinding() {
+        return BindingBuilder.bind(userDeletedQueue())
+                .to(userExchange())
+                .with(userDeletedRoutingKey);
+    }
+
+    @Bean
     DirectExchange eventExchange() {
         return new DirectExchange(eventExchangeName);
     }
@@ -89,6 +155,36 @@ public class RabbitConfig {
     }
 
     @Bean
+    Queue eventUpdatedQueue() {
+        return QueueBuilder.durable(eventUpdatedQueueName)
+                .withArgument("x-dead-letter-exchange", deadLetterExchangeName)
+                .withArgument("x-dead-letter-routing-key", deadLetterRoutingKey)
+                .build();
+    }
+
+    @Bean
+    Binding eventUpdatedBinding() {
+        return BindingBuilder.bind(eventUpdatedQueue())
+                .to(eventExchange())
+                .with(eventUpdatedRoutingKey);
+    }
+
+    @Bean
+    Queue eventDeletedQueue() {
+        return QueueBuilder.durable(eventDeletedQueueName)
+                .withArgument("x-dead-letter-exchange", deadLetterExchangeName)
+                .withArgument("x-dead-letter-routing-key", deadLetterRoutingKey)
+                .build();
+    }
+
+    @Bean
+    Binding eventDeletedBinding() {
+        return BindingBuilder.bind(eventDeletedQueue())
+                .to(eventExchange())
+                .with(eventDeletedRoutingKey);
+    }
+
+    @Bean
     DirectExchange ticketExchange() {
         return new DirectExchange(ticketExchangeName);
     }
@@ -106,6 +202,36 @@ public class RabbitConfig {
         return BindingBuilder.bind(ticketCreatedQueue())
                 .to(ticketExchange())
                 .with(ticketCreatedRoutingKey);
+    }
+
+    @Bean
+    Queue ticketUpdatedQueue() {
+        return QueueBuilder.durable(ticketUpdatedQueueName)
+                .withArgument("x-dead-letter-exchange", deadLetterExchangeName)
+                .withArgument("x-dead-letter-routing-key", deadLetterRoutingKey)
+                .build();
+    }
+
+    @Bean
+    Binding ticketUpdatedBinding() {
+        return BindingBuilder.bind(ticketUpdatedQueue())
+                .to(ticketExchange())
+                .with(ticketUpdatedRoutingKey);
+    }
+
+    @Bean
+    Queue ticketDeletedQueue() {
+        return QueueBuilder.durable(ticketDeletedQueueName)
+                .withArgument("x-dead-letter-exchange", deadLetterExchangeName)
+                .withArgument("x-dead-letter-routing-key", deadLetterRoutingKey)
+                .build();
+    }
+
+    @Bean
+    Binding ticketDeletedBinding() {
+        return BindingBuilder.bind(ticketDeletedQueue())
+                .to(ticketExchange())
+                .with(ticketDeletedRoutingKey);
     }
 
     // Final DLQ
