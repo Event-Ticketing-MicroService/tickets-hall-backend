@@ -5,7 +5,7 @@ import com.ticketshall.attendance.events.EventUpdatedEvent;
 import com.ticketshall.attendance.models.Event;
 import org.mapstruct.Mapper;
 
-@Mapper
+@Mapper(componentModel = "spring")
 public interface EventMapper {
     Event toEvent(EventCreatedEvent event);
     Event toEvent(EventUpdatedEvent event);
