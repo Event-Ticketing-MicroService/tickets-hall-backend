@@ -50,34 +50,26 @@ app:
       user: user.exchange
       event: event.exchange
       ticket: ticket.exchange
-#      ticketRetry: ticket.retry.exchange
+      dead-letter: deadLetter.exchange
     routing:
       userCreated: user.created
+      userUpdated: user.updated
+      userDeleted: user.deleted
       eventCreated: event.created
+      eventUpdated: event.updated
+      eventDeleted: event.deleted
       ticketCreated: ticket.created
+      ticketUpdated: ticket.updated
+      ticketDeleted: ticket.deleted
+      dead-letter: dead.letter
     queues:
       userCreated: user.created.queue
+      userUpdated: user.updated.queue
+      userDeleted: user.deleted.queue
       eventCreated: event.created.queue
+      eventUpdated: event.updated.queue
+      eventDeleted: event.deleted.queue
       ticketCreated: ticket.created.queue
-#        arguments:
-#          x-dead-letter-exchange: ticket.retry.exchange
-#          x-dead-letter-routing-key: ticket.created
-#          x-message-ttl: 5000  # retry after 5 seconds
-#    bindings:
-#      - destination: user.created.queue
-#        destinationType: queue
-#        exchange: user.exchange
-#        routingKey: user.created
-#      - destination: event.created.queue
-#        destinationType: queue
-#        exchange: event.exchange
-#        routingKey: event.created
-#      - destination: ticket.created.queue
-#        destinationType: queue
-#        exchange: ticket.exchange
-#        routingKey: ticket.created
-#      - destination: ticket.created.queue
-#        destinationType: queue
-#        exchange: ticket.retry.exchange
-#        routingKey: ticket.created
-
+      ticketUpdated: ticket.updated.queue
+      ticketDeleted: ticket.deleted.queue
+      dead-letter: final.dead.letter.queue
