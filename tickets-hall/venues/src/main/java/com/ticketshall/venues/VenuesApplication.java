@@ -7,5 +7,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class VenuesApplication {
     public static void main(String[] args) {
         SpringApplication.run(VenuesApplication.class, args);
+        System.out.println("Venues Application Started");
     }
 }
