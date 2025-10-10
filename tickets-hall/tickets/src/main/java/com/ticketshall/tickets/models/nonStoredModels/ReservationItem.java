@@ -1,7 +1,9 @@
 package com.ticketshall.tickets.models.nonStoredModels;
 
-import java.util.UUID;
+import lombok.AllArgsConstructor;
 
+import java.util.UUID;
+@AllArgsConstructor
 public class ReservationItem {
     private UUID ticketTypeId;
     private String ticketTypeName;

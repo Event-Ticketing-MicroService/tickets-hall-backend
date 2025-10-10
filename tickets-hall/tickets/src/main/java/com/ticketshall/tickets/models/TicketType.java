@@ -34,4 +34,6 @@ public final class TicketType {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false)
     private Event event;
+    @Column(name = "event_id", insertable = false, updatable = false)
+    private UUID eventId;
 }
