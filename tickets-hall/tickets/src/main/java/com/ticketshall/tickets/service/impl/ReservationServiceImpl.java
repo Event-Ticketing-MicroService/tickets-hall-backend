@@ -1,6 +1,9 @@
 package com.ticketshall.tickets.service.impl;
 
 import com.ticketshall.tickets.dto.ReservationRequest;
+import com.ticketshall.tickets.exceptions.TicketTypeLockTimeoutException;
+import com.ticketshall.tickets.exceptions.TicketTypeNotFoundException;
+import com.ticketshall.tickets.exceptions.TicketTypeStockNotEnoughException;
 import com.ticketshall.tickets.models.TicketType;
 import com.ticketshall.tickets.models.nonStoredModels.Reservation;
 import com.ticketshall.tickets.models.nonStoredModels.ReservationItem;
@@ -46,14 +49,14 @@ public class ReservationServiceImpl implements ReservationService {
             RLock lock = redissonClient.getLock("lock:" + ticketTypeKey);
             try{
                 if(!lock.tryLock(5,10, TimeUnit.SECONDS)){
-                    throw new RuntimeException
+                    throw new TicketTypeLockTimeoutException
                             ("Could not lock TicketType " + item.ticketTypeId());
                 }
                 Map<Object, Object> ticketData = redisTemplate.opsForHash().entries(ticketTypeKey);
                 if (ticketData.isEmpty()) {
                     TicketType type = ticketTypeRepository
                             .findById(item.ticketTypeId())
-                            .orElseThrow(() -> new RuntimeException
+                            .orElseThrow(() -> new TicketTypeNotFoundException
                                     ("TicketType not found: " + item.ticketTypeId()));
 
                     ticketData = Map.of(
@@ -71,7 +74,7 @@ public class ReservationServiceImpl implements ReservationService {
                 float price = Float.parseFloat((String)ticketData.get("price"));
                 int available = Integer.parseInt((String) ticketData.get("availableStock"));
                 if(available < item.quantity()){
-                    throw new RuntimeException("Not enough stock for TicketType " + item.ticketTypeId());
+                    throw new TicketTypeStockNotEnoughException("Not enough stock for TicketType " + item.ticketTypeId());
                 }
                 redisTemplate
                         .opsForHash()
