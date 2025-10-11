@@ -68,9 +68,9 @@ public class ReservationServiceImpl implements ReservationService {
                     redisTemplate.opsForHash().putAll(ticketTypeKey, ticketData);
                 }
                 String name = (String) ticketData.get("name");
-                float price = (float) ticketData.get("price");
+                float price = Float.parseFloat((String)ticketData.get("price"));
                 int available = Integer.parseInt((String) ticketData.get("availableStock"));
-                if(available <= item.quantity()){
+                if(available < item.quantity()){
                     throw new RuntimeException("Not enough stock for TicketType " + item.ticketTypeId());
                 }
                 redisTemplate
