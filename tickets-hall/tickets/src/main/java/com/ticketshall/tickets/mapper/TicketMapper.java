@@ -10,12 +10,10 @@ import org.mapstruct.Mapping;
 public interface TicketMapper {
     @Mapping(target = "attendee", ignore = true)
     @Mapping(target = "event", ignore = true)
-    @Mapping(target = "usedAtUtc", ignore = true)
     Ticket toTicket(TicketCreatedEvent event);
 
     @Mapping(target = "attendee", ignore = true)
     @Mapping(target = "event", ignore = true)
-    @Mapping(target = "usedAtUtc", ignore = true)
     Ticket toTicket(TicketUpdatedEvent event);
 
     @Mapping(source = "attendee.id", target = "userId")
