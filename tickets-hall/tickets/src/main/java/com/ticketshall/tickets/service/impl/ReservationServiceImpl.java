@@ -11,7 +11,6 @@ import com.ticketshall.tickets.repository.EventRepository;
 import com.ticketshall.tickets.repository.TicketRepository;
 import com.ticketshall.tickets.repository.TicketTypeRepository;
 import com.ticketshall.tickets.service.ReservationService;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
@@ -101,6 +100,42 @@ public class ReservationServiceImpl implements ReservationService {
         String reservationKey = String.format("%s%s", RESERVATION_PREFIX, reservationId);
         redisTemplate.opsForValue().set(reservationKey, reservation, TTL);
         return reservationObj;
-        // TODO: Publish Events to RabbitMQ
+    }
+
+    public void expireReservation(String reservationId) {
+        String redisKey = String.format("%s%s", RESERVATION_PREFIX, reservationId);
+
+        Reservation reservation = (Reservation) redisTemplate.opsForValue().get(redisKey);
+        if (reservation == null) {
+            return;
+        }
+
+        for (ReservationItem item : reservation.getItems()) {
+            String ticketTypeKey = String.format("%s%s", TICKET_TYPE_PREFIX, item.getTicketTypeId());
+            String lockKey = "lock:" + ticketTypeKey;
+            RLock lock = redissonClient.getLock(lockKey);
+
+            try {
+                if (!lock.tryLock(5, 10, TimeUnit.SECONDS)) {
+                    continue;
+                }
+
+                Map<Object, Object> ticketData = redisTemplate.opsForHash().entries(ticketTypeKey);
+                if (ticketData.isEmpty()) {
+                    continue;
+                }
+
+                int available = Integer.parseInt((String) ticketData.get("availableStock"));
+                int newAvailable = available + item.getQuantity();
+                redisTemplate.opsForHash().put(ticketTypeKey, "availableStock", newAvailable);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException("Lock interrupted for ticket type: " + item.getTicketTypeId(), e);
+            } finally {
+                lock.unlock();
+            }
+        }
+
+        redisTemplate.delete(redisKey);
     }
 }
