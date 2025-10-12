@@ -36,15 +36,20 @@ public class ReservationServiceImpl implements ReservationService {
     private static final Duration EXPIRATION_TIME = Duration.ofMinutes(10);
     private static final Duration TTL = Duration.ofMinutes(12);
     private static final String RESERVATION_PREFIX = "reservation:";
-    private static final String TICKET_TYPE_PREFIX = "ticketType:";
+    private static final String TICKET_TYPE_INFIX = ":ticketType:";
+    private static final String EVENT_PREFIX = "event:";
     @Override
     public Reservation reserve(ReservationRequest reservationRequest) {
         String reservationId = UUID.randomUUID().toString();
         List<ReservationItem> reservationItems = new ArrayList<>();
         float totalPrice = (float) 0;
         for(var requestItem: reservationRequest.items()){
-            String ticketTypeKey =
-                    String.format("%s%s", TICKET_TYPE_PREFIX, requestItem.ticketTypeId().toString());
+            String ticketTypeKey = // event:id:TicketType:id
+                    String.format("%s%s%s%s",
+                            EVENT_PREFIX,
+                            reservationRequest.eventId(),
+                            TICKET_TYPE_INFIX,
+                            requestItem.ticketTypeId().toString());
             RLock lock = redissonClient.getLock("lock:" + ticketTypeKey);
             try{
                 if(!lock.tryLock(5,10, TimeUnit.SECONDS)){
@@ -111,7 +116,11 @@ public class ReservationServiceImpl implements ReservationService {
         }
 
         for (ReservationItem item : reservation.getItems()) {
-            String ticketTypeKey = String.format("%s%s", TICKET_TYPE_PREFIX, item.getTicketTypeId());
+            String ticketTypeKey = String.format("%s%s%s%s",
+                    EVENT_PREFIX,
+                    reservation.getEventId(),
+                    TICKET_TYPE_INFIX,
+                    item.getTicketTypeId());
             String lockKey = "lock:" + ticketTypeKey;
             RLock lock = redissonClient.getLock(lockKey);
 

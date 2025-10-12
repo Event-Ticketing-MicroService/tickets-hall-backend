@@ -4,6 +4,6 @@ import com.ticketshall.tickets.dto.ReservationRequest;
 import com.ticketshall.tickets.models.nonStoredModels.Reservation;
 
 public interface ReservationService {
-    Reservation reserve(ReservationRequest reservation);
+    Reservation reserve(ReservationRequest request);
 
 }
