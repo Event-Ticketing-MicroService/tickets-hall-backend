@@ -38,25 +38,25 @@ public class ReservationServiceImpl implements ReservationService {
     private static final String RESERVATION_PREFIX = "reservation:";
     private static final String TICKET_TYPE_PREFIX = "ticketType:";
     @Override
-    public Reservation reserve(ReservationRequest reservation) {
+    public Reservation reserve(ReservationRequest reservationRequest) {
         String reservationId = UUID.randomUUID().toString();
-        List<ReservationItem> items = new ArrayList<>();
+        List<ReservationItem> reservationItems = new ArrayList<>();
         float totalPrice = (float) 0;
-        for(var item: reservation.items()){
+        for(var requestItem: reservationRequest.items()){
             String ticketTypeKey =
-                    String.format("%s%s", TICKET_TYPE_PREFIX, item.ticketTypeId().toString());
+                    String.format("%s%s", TICKET_TYPE_PREFIX, requestItem.ticketTypeId().toString());
             RLock lock = redissonClient.getLock("lock:" + ticketTypeKey);
             try{
                 if(!lock.tryLock(5,10, TimeUnit.SECONDS)){
                     throw new TicketTypeLockTimeoutException
-                            ("Could not lock TicketType " + item.ticketTypeId());
+                            ("Could not lock TicketType " + requestItem.ticketTypeId());
                 }
                 Map<Object, Object> ticketData = redisTemplate.opsForHash().entries(ticketTypeKey);
                 if (ticketData.isEmpty()) {
                     TicketType type = ticketTypeRepository
-                            .findById(item.ticketTypeId())
+                            .findById(requestItem.ticketTypeId())
                             .orElseThrow(() -> new TicketTypeNotFoundException
-                                    ("TicketType not found: " + item.ticketTypeId()));
+                                    ("TicketType not found: " + requestItem.ticketTypeId()));
 
                     ticketData = Map.of(
                             "id", String.valueOf(type.getId()),
@@ -72,34 +72,34 @@ public class ReservationServiceImpl implements ReservationService {
                 String name = (String) ticketData.get("name");
                 float price = Float.parseFloat((String)ticketData.get("price"));
                 int available = Integer.parseInt((String) ticketData.get("availableStock"));
-                if(available < item.quantity()){
-                    throw new TicketTypeStockNotEnoughException("Not enough stock for TicketType " + item.ticketTypeId());
+                if(available < requestItem.quantity()){
+                    throw new TicketTypeStockNotEnoughException("Not enough stock for TicketType " + requestItem.ticketTypeId());
                 }
                 redisTemplate
                         .opsForHash()
-                        .put(ticketTypeKey, "availableStock", available - item.quantity());
-                items.add(new ReservationItem(item.ticketTypeId(), name, item.quantity(), price));
-                totalPrice += item.quantity() * price;
+                        .put(ticketTypeKey, "availableStock", available - requestItem.quantity());
+                reservationItems.add(new ReservationItem(requestItem.ticketTypeId(), name, requestItem.quantity(), price));
+                totalPrice += requestItem.quantity() * price;
             }
             catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                throw new RuntimeException("Lock interrupted for ticket type: " + item.ticketTypeId(), e);
+                throw new RuntimeException("Lock interrupted for ticket type: " + requestItem.ticketTypeId(), e);
             }
             finally {
                 lock.unlock();
             }
         }
-        Reservation reservationObj = new Reservation(
+        Reservation reservation = new Reservation(
                 UUID.fromString(reservationId),
-                reservation.attendeeId(),
-                reservation.eventId(),
-                items,
+                reservationRequest.attendeeId(),
+                reservationRequest.eventId(),
+                reservationItems,
                 totalPrice,
                 LocalDateTime.now().plus(EXPIRATION_TIME)
         );
         String reservationKey = String.format("%s%s", RESERVATION_PREFIX, reservationId);
-        redisTemplate.opsForValue().set(reservationKey, reservation, TTL);
-        return reservationObj;
+        redisTemplate.opsForValue().set(reservationKey, reservationRequest, TTL);
+        return reservation;
     }
 
     public void expireReservation(String reservationId) {
