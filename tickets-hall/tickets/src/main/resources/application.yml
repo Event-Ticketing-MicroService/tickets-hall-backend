@@ -28,10 +28,48 @@ spring:
       
   cache:
     type: redis
+
   # RabbitMQ Configuration
   rabbitmq:
     host: localhost
     port: 5672
     username: admin
     password: admin
+    listener:
+      simple:
+        retry:
+          enabled: true
+          initial-interval: 2000ms
+          max-attempts: 5
+          max-interval: 10000ms
+          multiplier: 2.0
+        default-requeue-rejected: false
+        acknowledge-mode: auto
 
+# Application-specific RabbitMQ Configuration
+app:
+  rabbitmq:
+    exchanges:
+      user: user.exchange
+      event: event.exchange
+      ticket: ticket.exchange
+      dead-letter: deadLetter.exchange
+    routing:
+      userCreated: user.created
+      userUpdated: user.updated
+      userDeleted: user.deleted
+      eventCreated: event.created
+      eventUpdated: event.updated
+      eventDeleted: event.deleted
+      ticketCreated: ticket.created
+      ticketUpdated: ticket.updated
+      ticketDeleted: ticket.deleted
+      dead-letter: dead.letter
+    queues:
+      userCreated: user.created.queue
+      userUpdated: user.updated.queue
+      userDeleted: user.deleted.queue
+      eventCreated: event.created.queue
+      eventUpdated: event.updated.queue
+      eventDeleted: event.deleted.queue
+      dead-letter: final.dead.letter.queue
