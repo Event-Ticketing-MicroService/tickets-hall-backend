@@ -64,8 +64,14 @@ public class CustomerController {
 
 
 //    @PatchMapping(path = "/{id}")
-//    public void updateCustomerPartially(@PathVariable Long id, Map<String, Object> changes){
-//     need to implement
+//    public ResponseEntity<?> updateCustomerPartially(@PathVariable Long id, @RequestBody Map<String, Object> changes){
+//     try{
+//         customerService.updateCustomerPartially(id, changes);
+//         return ResponseEntity.ok(Map.of("message", "Customer updates successfully"));
+//     } catch (IllegalStateException e){
+//         return ResponseEntity.status(HttpStatus.NOT_FOUND)
+//                 .body(Map.of("message", e.getMessage()));
+//     }
 //    }
 
     @DeleteMapping(path = "/{id}")
@@ -105,4 +111,16 @@ public class CustomerController {
         ));
     }
 
+    @PatchMapping("/{id}/password")
+    public ResponseEntity<?> changePassword(@PathVariable Long id, @RequestBody Map<String, String> passwords){
+        try{
+            String oldPassword = passwords.get("oldPassword");
+            String newPassword = passwords.get("newPassword");
+            customerService.changePassword(id, oldPassword, newPassword);
+            return ResponseEntity.ok(Map.of("message", "Password updated successfully"));
+        } catch (IllegalStateException e){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("message", e.getMessage()));
+        }
+    }
 }

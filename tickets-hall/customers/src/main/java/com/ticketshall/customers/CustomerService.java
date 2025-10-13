@@ -4,7 +4,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.lang.reflect.Field;
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -58,4 +61,34 @@ public class CustomerService {
     public boolean checkPassword(String password, String userPassword) {
         return passwordEncoder.matches(password, userPassword);
     }
+
+    @Transactional
+    public void updateCustomerPartially(Long id, Map<String, Object> changes) {
+        Customer customer = customerRepository.findById(id).orElseThrow(() -> new IllegalStateException("Customer with id: " + id + " not found."));
+
+        changes.forEach((key, value) -> {
+            try{
+                Field field = Customer.class.getDeclaredField(key);
+                field.setAccessible(true);
+
+                if (field.getType().equals(LocalDate.class) && value instanceof String) {
+                    value = LocalDate.parse((String) value);
+                }
+
+                field.set(customer, value);
+            } catch (NoSuchFieldException | IllegalAccessException e) {
+                throw new IllegalStateException("Invalid field: " + key);
+            }
+        });
+    }
+
+    @Transactional
+    public void changePassword(Long id, String oldPassword, String newPassword) {
+        Customer customer = customerRepository.findById(id).orElseThrow(()-> new IllegalStateException("User with id " + id + " not found."));
+        if(!passwordEncoder.matches(oldPassword, customer.getPassword())){
+            throw new IllegalStateException("Invalid password entered.");
+        }
+        customer.setPassword(passwordEncoder.encode(newPassword));
+    }
+
 }
