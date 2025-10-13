@@ -4,6 +4,7 @@ import com.ticketshall.tickets.dto.CreateTicketTypeRequest;
 import com.ticketshall.tickets.mapper.TicketTypeMapper;
 import com.ticketshall.tickets.models.Ticket;
 import com.ticketshall.tickets.models.TicketType;
+import com.ticketshall.tickets.models.nonStoredModels.constants.GeneralConstants;
 import com.ticketshall.tickets.repository.EventRepository;
 import com.ticketshall.tickets.repository.TicketTypeRepository;
 import com.ticketshall.tickets.service.TicketService;
@@ -11,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -21,8 +23,6 @@ public class TicketServiceImpl implements TicketService {
     private final EventRepository eventRepository;
     private final TicketTypeMapper ticketTypeMapper;
     private final RedisTemplate<String, Object> redisTemplate;
-    private static final String TICKET_TYPE_INFIX = ":ticketType:";
-    private static final String EVENT_PREFIX = "event:";
     @Override
     public TicketType createTicketType(CreateTicketTypeRequest request){
         if(!eventRepository.existsById(request.eventId())){
@@ -35,13 +35,15 @@ public class TicketServiceImpl implements TicketService {
     // TODO: Keep cache valid throughout various ops on TicketType
     @Override
     public List<TicketType> listTicketTypesForEvent(UUID eventId) {
-        var keys = redisTemplate.keys(EVENT_PREFIX + eventId + TICKET_TYPE_INFIX + "*");
-        List<TicketType> result = new java.util.ArrayList<>();
+        var keys = redisTemplate.keys(GeneralConstants.REDIS_EVENT_PREFIX + eventId + GeneralConstants.REDIS_TICKET_TYPE_INFIX + "*");
+        List<TicketType> result;
         if (keys.isEmpty()) { // cache miss
             result = ticketTypeRepository.getTicketTypesByEventId(eventId);
             result.forEach(ticketType -> redisTemplate.opsForValue()
-                    .set(EVENT_PREFIX + eventId + TICKET_TYPE_INFIX + ticketType.getId(), ticketType));
+                    .set(GeneralConstants.REDIS_EVENT_PREFIX + eventId + GeneralConstants.REDIS_TICKET_TYPE_INFIX + ticketType.getId(), ticketType));
+            return result;
         }
+        result = new ArrayList<>();
         for (String key: keys){
             var ticketType = (TicketType) redisTemplate.opsForValue().get(key);
             if (ticketType != null) {
