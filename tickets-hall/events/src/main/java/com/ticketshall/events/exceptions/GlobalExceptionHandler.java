@@ -4,6 +4,7 @@ import com.ticketshall.events.dtos.responses.ApiErrorResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -25,6 +26,14 @@ public class GlobalExceptionHandler {
         ApiErrorResponse apiErrorResponse = new ApiErrorResponse("RESOURCE_NOT_FOUND", e.getMessage(), e.getStatusCode().value());
         return ResponseEntity.status(e.getStatusCode()).body(apiErrorResponse);
     }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ApiErrorResponse> handleMethodNotSupported(HttpRequestMethodNotSupportedException e) {
+        log.warn("Method Not Allowed: {}", e.getMessage(), e);
+        ApiErrorResponse errorResponse = new ApiErrorResponse("METHOD_NOT_ALLOWED", "HTTP method " + e.getMethod() + " is not supported for this endpoint", HttpStatus.METHOD_NOT_ALLOWED.value());
+        return ResponseEntity.status(e.getStatusCode()).body(errorResponse);
+    }
+
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiErrorResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {

@@ -11,4 +11,7 @@ import java.util.UUID;
 public interface CategoryRepository extends JpaRepository<Category, UUID> {
     @Query(value = "SELECT EXISTS(SELECT 1 FROM categories WHERE name = :name)", nativeQuery = true)
     boolean existsByNameNative(@Param("name") String name);
+
+    @Query(value = "SELECT EXISTS(SELECT 1 FROM categories WHERE name = :name AND id <> :id)", nativeQuery = true)
+    boolean existsAnotherOneByNameNative(@Param("name") String name, @Param("id") UUID id);
 }

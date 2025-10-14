@@ -1,15 +1,15 @@
 package com.ticketshall.events.controllers;
 
 import com.ticketshall.events.dtos.params.CategoryParams;
+import com.ticketshall.events.models.Category;
 import com.ticketshall.events.services.CategoryService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/categories")
@@ -24,7 +24,13 @@ public class CategoryController {
 
     @PostMapping("")
     ResponseEntity<?> createCategory(@Valid @RequestBody CategoryParams categoryParams) {
-        categoryService.save(categoryParams);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        Category category = categoryService.createCategory(categoryParams);
+        return ResponseEntity.status(HttpStatus.CREATED).body(category);
+    }
+
+    @PutMapping("/{id}")
+    ResponseEntity<?> updateCategory(@PathVariable UUID id, @Valid @RequestBody CategoryParams categoryParams) {
+        Category category = categoryService.updateCategory(id, categoryParams);
+        return ResponseEntity.ok(category);
     }
 }
