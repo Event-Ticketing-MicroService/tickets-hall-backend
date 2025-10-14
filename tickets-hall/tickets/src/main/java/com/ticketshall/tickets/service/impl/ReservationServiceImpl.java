@@ -18,10 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -47,16 +44,23 @@ public class ReservationServiceImpl implements ReservationService {
                 if (!lock.tryLock(5, 10, TimeUnit.SECONDS)) {
                     throw new TicketTypeLockTimeoutException("Could not lock TicketType " + reqItem.ticketTypeId());
                 }
-                // load ticket data from redis or from database
-                Map<Object, Object> ticketData = getOrLoadTicketType(ticketTypeKey, reqItem.ticketTypeId());
-                // Decrement the stock
-                decrementStock(ticketData, reqItem.quantity(), ticketTypeKey);
-                // Create a reservation item
-                ReservationItem reservationItem = createReservationItem(ticketData, reqItem.quantity());
-                // add the reservation item to list of reservation items
-                reservationItems.add(reservationItem);
-                // accumulate total price
-                totalPrice += reservationItem.getQuantity() * reservationItem.getUnitPrice();
+                TicketType ticketType = getOrLoadTicketType(ticketTypeKey, reqItem.ticketTypeId());
+                if (ticketType.getAvailableStock() < reqItem.quantity()) {
+                    throw new TicketTypeStockNotEnoughException("Not enough stock for " + ticketType.getName());
+                }
+
+                ticketType.setAvailableStock(ticketType.getAvailableStock() - reqItem.quantity());
+                updateTicketTypeCache(request.eventId(), ticketType);
+
+                ReservationItem item = new ReservationItem(
+                        ticketType.getId(),
+                        ticketType.getName(),
+                        reqItem.quantity(),
+                        ticketType.getPrice()
+                );
+
+                reservationItems.add(item);
+                totalPrice += item.getQuantity() * item.getUnitPrice();
 
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
@@ -65,7 +69,7 @@ public class ReservationServiceImpl implements ReservationService {
                 lock.unlock();
             }
         }
-        // return the reservation
+
         return createAndStoreReservation(request, reservationItems, totalPrice);
     }
 
@@ -77,39 +81,54 @@ public class ReservationServiceImpl implements ReservationService {
                 ticketTypeId);
     }
 
-    private Map<Object, Object> getOrLoadTicketType(String key, UUID ticketTypeId) {
+    private TicketType getOrLoadTicketType(String key, UUID ticketTypeId) {
         Map<Object, Object> data = redisTemplate.opsForHash().entries(key);
         if (data.isEmpty()) {
             TicketType type = ticketTypeRepository.findById(ticketTypeId)
                     .orElseThrow(() -> new TicketTypeNotFoundException("TicketType not found: " + ticketTypeId));
 
-            data = Map.of(
-                    "id", String.valueOf(type.getId()),
-                    "eventId", String.valueOf(type.getEventId()),
-                    "name", type.getName(),
-                    "price", type.getPrice().toString(),
-                    "totalStock", String.valueOf(type.getTotalStock()),
-                    "availableStock", String.valueOf(type.getAvailableStock())
-            );
-
-            redisTemplate.opsForHash().putAll(key, data);
+            cacheTicketTypeHash(key, type);
+            return type;
+        } else {
+            return mapToTicketType(data);
         }
-        return data;
+
     }
 
-    private void decrementStock(Map<Object, Object> ticketData, int quantity, String key) {
-        int available = Integer.parseInt((String) ticketData.get("availableStock"));
-        if (available < quantity) {
-            throw new TicketTypeStockNotEnoughException("Not enough stock for TicketType " + ticketData.get("id"));
-        }
-        redisTemplate.opsForHash().put(key, "availableStock", available - quantity);
+    private void cacheTicketTypeHash(String key, TicketType type) {
+        Map<String, String> map = new HashMap<>();
+        map.put("id", type.getId().toString());
+        map.put("eventId", type.getEventId().toString());
+        map.put("name", type.getName());
+        map.put("price", type.getPrice().toString());
+        map.put("totalStock", String.valueOf(type.getTotalStock()));
+        map.put("availableStock", String.valueOf(type.getAvailableStock()));
+        redisTemplate.opsForHash().putAll(key, map);
     }
 
-    private ReservationItem createReservationItem(Map<Object, Object> ticketData, int quantity) {
-        String name = (String) ticketData.get("name");
-        float price = Float.parseFloat((String) ticketData.get("price"));
-        UUID ticketTypeId = UUID.fromString((String) ticketData.get("id"));
-        return new ReservationItem(ticketTypeId, name, quantity, price);
+    private TicketType mapToTicketType(Map<Object, Object> data) {
+        TicketType type = new TicketType();
+        type.setId(UUID.fromString((String) data.get("id")));
+        type.setEventId(UUID.fromString((String) data.get("eventId")));
+        type.setName((String) data.get("name"));
+        type.setPrice(Float.parseFloat((String) data.get("price")));
+        type.setTotalStock(Integer.parseInt((String) data.get("totalStock")));
+        type.setAvailableStock(Integer.parseInt((String) data.get("availableStock")));
+        return type;
+    }
+
+    private void updateTicketTypeCache(UUID eventId, TicketType updated) {
+        String hashKey = buildTicketTypeKey(eventId, updated.getId());
+        cacheTicketTypeHash(hashKey, updated);
+        String listKey = GeneralConstants.REDIS_EVENT_PREFIX + eventId + GeneralConstants.REDIS_TICKET_TYPE_INFIX;
+        List<TicketType> cachedList = (List<TicketType>) redisTemplate.opsForValue().get(listKey);
+
+        if (cachedList != null && !cachedList.isEmpty()) {
+            List<TicketType> updatedList = cachedList.stream()
+                    .map(t -> t.getId().equals(updated.getId()) ? updated : t)
+                    .toList();
+            redisTemplate.opsForValue().set(listKey, updatedList, Duration.ofMinutes(30));
+        }
     }
 
     private Reservation createAndStoreReservation(ReservationRequest request, List<ReservationItem> items, float totalPrice) {
@@ -131,29 +150,20 @@ public class ReservationServiceImpl implements ReservationService {
 
     public void expireReservation(UUID reservationId) {
         String redisKey = String.format("%s%s", GeneralConstants.REDIS_RESERVATION_PREFIX, reservationId);
-
         Reservation reservation = (Reservation) redisTemplate.opsForValue().get(redisKey);
-        if (reservation == null) {
-            return;
-        }
+        if (reservation == null) return;
 
         for (ReservationItem item : reservation.getItems()) {
             String ticketTypeKey = buildTicketTypeKey(reservation.getEventId(), item.getTicketTypeId());
 
             RLock lock = redissonClient.getLock("lock:" + ticketTypeKey);
             try {
-                if (!lock.tryLock(5, 10, TimeUnit.SECONDS)) {
-                    continue;
-                }
+                if (!lock.tryLock(5, 10, TimeUnit.SECONDS)) continue;
 
-                Map<Object, Object> ticketData = redisTemplate.opsForHash().entries(ticketTypeKey);
-                if (ticketData.isEmpty()) {
-                    continue;
-                }
+                TicketType ticketType = getOrLoadTicketType(ticketTypeKey, item.getTicketTypeId());
+                ticketType.setAvailableStock(ticketType.getAvailableStock() + item.getQuantity());
+                updateTicketTypeCache(reservation.getEventId(), ticketType);
 
-                int available = Integer.parseInt((String) ticketData.get("availableStock"));
-                int newAvailable = available + item.getQuantity();
-                redisTemplate.opsForHash().put(ticketTypeKey, "availableStock", newAvailable);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 throw new RuntimeException("Lock interrupted for ticket type: " + item.getTicketTypeId(), e);
@@ -161,6 +171,7 @@ public class ReservationServiceImpl implements ReservationService {
                 lock.unlock();
             }
         }
+
         redisTemplate.delete(redisKey);
     }
 }
