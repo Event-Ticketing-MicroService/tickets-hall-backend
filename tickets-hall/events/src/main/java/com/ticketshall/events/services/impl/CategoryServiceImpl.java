@@ -1,6 +1,7 @@
 package com.ticketshall.events.services.impl;
 
 import com.ticketshall.events.dtos.params.CategoryParams;
+import com.ticketshall.events.dtos.responses.CategoryResponse;
 import com.ticketshall.events.exceptions.ConflictErrorException;
 import com.ticketshall.events.exceptions.NotFoundException;
 import com.ticketshall.events.mappers.CategoryMapper;
@@ -10,12 +11,12 @@ import com.ticketshall.events.services.CategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 @Service
 public class CategoryServiceImpl implements CategoryService {
-
     CategoryRepository categoryRepository;
     CategoryMapper categoryMapper;
 
@@ -46,5 +47,10 @@ public class CategoryServiceImpl implements CategoryService {
         category.setName(categoryParams.getName());
 
         return categoryRepository.save(category);
+    }
+
+    @Override
+    public List<CategoryResponse> findAll() {
+        return categoryRepository.findAllCategories();
     }
 }
