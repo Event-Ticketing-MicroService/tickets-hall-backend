@@ -2,6 +2,7 @@ package com.ticketshall.tickets.service.impl;
 
 import com.ticketshall.tickets.dto.request.CreateTicketTypeRequest;
 import com.ticketshall.tickets.dto.request.UpdateTicketTypeRequest;
+import com.ticketshall.tickets.exceptions.TicketTypeNotFoundException;
 import com.ticketshall.tickets.mapper.TicketTypeMapper;
 import com.ticketshall.tickets.models.TicketType;
 import com.ticketshall.tickets.models.nonStoredModels.constants.GeneralConstants;
@@ -80,13 +81,19 @@ public class TicketTypeServiceImpl implements TicketTypeService {
         // remove from cache
         // remove from DB
         // put constraint not to delete if reservations are open
-        var type = ticketTypeRepository.findById(ticketTypeId)
-                .orElseThrow(() -> new RuntimeException("TicketType not found: " + ticketTypeId));
+        var dbType = ticketTypeRepository.findById(ticketTypeId);
+        if(dbType.isEmpty()) {
+            throw new TicketTypeNotFoundException("TicketType not found: " + ticketTypeId);
+        }
+        var cacheKey = getEventTicketTypesKey(dbType.get().getEventId());
+        List<TicketType> cached = (List<TicketType>)redisTemplate.opsForValue().get(cacheKey);
+        if (cached != null && !cached.isEmpty()) {
+            cached.removeIf(t -> t.getId().equals(ticketTypeId));
+            redisTemplate.opsForValue().set(cacheKey, cached);
+            return true;
+        }
 
-        ticketTypeRepository.delete(type);
-
-        updateEventTicketTypesCache(type.getEventId());
-
+        ticketTypeRepository.delete(dbType.get());
         return true;
     }
 
