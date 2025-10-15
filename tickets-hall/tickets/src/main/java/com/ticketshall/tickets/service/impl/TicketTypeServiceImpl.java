@@ -36,8 +36,12 @@ public class TicketTypeServiceImpl implements TicketTypeService {
         var ticketType = ticketTypeMapper.toTicketType(request);
         ticketTypeRepository.save(ticketType);
         // AppendToCache don't update the full list
-        updateEventTicketTypesCache(ticketType.getEventId());
-
+        var cacheKey = getEventTicketTypesKey(request.eventId());
+        List<TicketType> cached = (List<TicketType>)redisTemplate.opsForValue().get(cacheKey);
+        if (cached != null && !cached.isEmpty()) {
+            cached.add(ticketType);
+            redisTemplate.opsForValue().set(cacheKey, cached);
+        }
         return ticketType;
     }
 
@@ -112,16 +116,6 @@ public class TicketTypeServiceImpl implements TicketTypeService {
         return ticketTypes;
     }
 
-    private void updateEventTicketTypesCache(UUID eventId) {
-        List<TicketType> freshList = ticketTypeRepository.getTicketTypesByEventId(eventId);
-        String cacheKey = getEventTicketTypesKey(eventId);
-
-        if(freshList.isEmpty()) {
-            redisTemplate.delete(cacheKey);
-        } else {
-            redisTemplate.opsForValue().set(cacheKey, freshList);
-        }
-    }
     private String getEventTicketTypesKey(UUID eventId) {
         return GeneralConstants.REDIS_EVENT_PREFIX + eventId + GeneralConstants.REDIS_TICKET_TYPE_INFIX;
     }
