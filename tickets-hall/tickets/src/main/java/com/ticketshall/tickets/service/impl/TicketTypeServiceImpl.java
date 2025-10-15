@@ -14,6 +14,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -51,18 +52,25 @@ public class TicketTypeServiceImpl implements TicketTypeService {
         // if not found in cache
         // Update Fields In cache
         // Update Fields in Database
+        var event = eventRepository.findById(request.eventId())
+                .orElseThrow(() -> new IllegalArgumentException("Event not found: " + request.eventId()));
+        if (event.getReservationStartsAtUtc().isBefore(LocalDateTime.now())){
+            throw new IllegalArgumentException("TicketType can't be updated because the reservations already started");
+        }
         var cacheKey = getEventTicketTypesKey(request.eventId());
         List<TicketType> cached = (List<TicketType>)redisTemplate.opsForValue().get(cacheKey);
+        int newAvailableStock;
         if (cached != null && !cached.isEmpty()) {
             for (TicketType type : cached) {
                 if (type.getId().equals(request.id())) {
-                    var newAvailableStock = type.getAvailableStock() - (request.stock() - type.getTotalStock());
+                    newAvailableStock = type.getAvailableStock() - (request.stock() - type.getTotalStock());
                     if(newAvailableStock < 0) {
                         throw new IllegalArgumentException("the new Available Stock can't be negative " + type.getName());
                     }
                     type.setName(request.name());
                     type.setPrice(request.price());
                     type.setTotalStock(request.stock());
+                    type.setAvailableStock(newAvailableStock);
                     redisTemplate.opsForValue().set(cacheKey, cached);
                     return type;
                 }
@@ -70,10 +78,11 @@ public class TicketTypeServiceImpl implements TicketTypeService {
         }
         var type = ticketTypeRepository.findById(request.id())
                 .orElseThrow(() -> new RuntimeException("TicketType not found: " + request.id()));
-
+        newAvailableStock = type.getAvailableStock() - (request.stock() - type.getTotalStock());
         type.setName(request.name());
         type.setPrice(request.price());
         type.setTotalStock(request.stock());
+        type.setAvailableStock(newAvailableStock);
         type.setEventId(request.eventId());
         ticketTypeRepository.save(type);
 
@@ -85,11 +94,14 @@ public class TicketTypeServiceImpl implements TicketTypeService {
         // remove from cache
         // remove from DB
         // put constraint not to delete if reservations are open
-        var dbType = ticketTypeRepository.findById(ticketTypeId);
-        if(dbType.isEmpty()) {
-            throw new TicketTypeNotFoundException("TicketType not found: " + ticketTypeId);
+        var dbType = ticketTypeRepository.findById(ticketTypeId)
+                .orElseThrow(() -> new TicketTypeNotFoundException("TicketType not found: " + ticketTypeId));
+        var event = eventRepository.findById(dbType.getEventId())
+                .orElseThrow(() -> new IllegalArgumentException("Event not found: " + dbType.getEventId()));
+        if (event.getReservationStartsAtUtc().isBefore(LocalDateTime.now())){
+            throw new IllegalArgumentException("TicketType can't be updated because the reservations already started");
         }
-        var cacheKey = getEventTicketTypesKey(dbType.get().getEventId());
+        var cacheKey = getEventTicketTypesKey(dbType.getEventId());
         List<TicketType> cached = (List<TicketType>)redisTemplate.opsForValue().get(cacheKey);
         if (cached != null && !cached.isEmpty()) {
             cached.removeIf(t -> t.getId().equals(ticketTypeId));
@@ -97,7 +109,7 @@ public class TicketTypeServiceImpl implements TicketTypeService {
             return true;
         }
 
-        ticketTypeRepository.delete(dbType.get());
+        ticketTypeRepository.delete(dbType);
         return true;
     }
 
