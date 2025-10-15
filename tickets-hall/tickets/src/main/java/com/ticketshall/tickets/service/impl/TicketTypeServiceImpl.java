@@ -23,8 +23,8 @@ public class TicketTypeServiceImpl implements TicketTypeService {
     private final EventRepository eventRepository;
     private final TicketTypeMapper ticketTypeMapper;
     private final RedisTemplate<String, Object> redisTemplate;
-
-    private static final Duration CACHE_TTL = Duration.ofMinutes(30);
+    // TODO: make the TTL until the Event is over
+    //private static final Duration CACHE_TTL = Duration.ofMinutes(30);
 
     @Override
     public TicketType createTicketType(CreateTicketTypeRequest request) {
@@ -34,7 +34,7 @@ public class TicketTypeServiceImpl implements TicketTypeService {
 
         var ticketType = ticketTypeMapper.toTicketType(request);
         ticketTypeRepository.save(ticketType);
-
+        // AppendToCache don't update the full list
         updateEventTicketTypesCache(ticketType.getEventId());
 
         return ticketType;
@@ -42,6 +42,27 @@ public class TicketTypeServiceImpl implements TicketTypeService {
 
     @Override
     public TicketType updateTicketType(UpdateTicketTypeRequest request) {
+        // Check Cache First
+        // if not found in cache
+        // Update Fields In cache
+        // Update Fields in Database
+        var cacheKey = getEventTicketTypesKey(request.eventId());
+        List<TicketType> cached = (List<TicketType>)redisTemplate.opsForValue().get(cacheKey);
+        if (cached != null && !cached.isEmpty()) {
+            for (TicketType type : cached) {
+                if (type.getId().equals(request.id())) {
+                    var newAvailableStock = type.getAvailableStock() - (request.stock() - type.getTotalStock());
+                    if(newAvailableStock < 0) {
+                        throw new IllegalArgumentException("the new Available Stock can't be negative " + type.getName());
+                    }
+                    type.setName(request.name());
+                    type.setPrice(request.price());
+                    type.setTotalStock(request.stock());
+                    redisTemplate.opsForValue().set(cacheKey, cached);
+                    return type;
+                }
+            }
+        }
         var type = ticketTypeRepository.findById(request.id())
                 .orElseThrow(() -> new RuntimeException("TicketType not found: " + request.id()));
 
@@ -49,15 +70,16 @@ public class TicketTypeServiceImpl implements TicketTypeService {
         type.setPrice(request.price());
         type.setTotalStock(request.stock());
         type.setEventId(request.eventId());
-
         ticketTypeRepository.save(type);
-        updateEventTicketTypesCache(type.getEventId());
 
         return type;
     }
 
     @Override
     public boolean deleteTicketType(UUID ticketTypeId) {
+        // remove from cache
+        // remove from DB
+        // put constraint not to delete if reservations are open
         var type = ticketTypeRepository.findById(ticketTypeId)
                 .orElseThrow(() -> new RuntimeException("TicketType not found: " + ticketTypeId));
 
@@ -77,7 +99,7 @@ public class TicketTypeServiceImpl implements TicketTypeService {
         }
         List<TicketType> ticketTypes = ticketTypeRepository.getTicketTypesByEventId(eventId);
         if(!ticketTypes.isEmpty()) {
-            redisTemplate.opsForValue().set(cacheKey, ticketTypes, CACHE_TTL);
+            redisTemplate.opsForValue().set(cacheKey, ticketTypes);
         }
 
         return ticketTypes;
@@ -90,7 +112,7 @@ public class TicketTypeServiceImpl implements TicketTypeService {
         if(freshList.isEmpty()) {
             redisTemplate.delete(cacheKey);
         } else {
-            redisTemplate.opsForValue().set(cacheKey, freshList, CACHE_TTL);
+            redisTemplate.opsForValue().set(cacheKey, freshList);
         }
     }
     private String getEventTicketTypesKey(UUID eventId) {
