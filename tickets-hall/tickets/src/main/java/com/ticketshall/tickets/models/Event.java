@@ -19,6 +19,8 @@ public final class Event {
     @Id
     UUID id;
     String name;
+    LocalDateTime ReservationStartsAtUtc;
+    LocalDateTime ReservationEndsAtUtc;
     LocalDateTime startDate;
     LocalDateTime endDate;
     String venueName;
