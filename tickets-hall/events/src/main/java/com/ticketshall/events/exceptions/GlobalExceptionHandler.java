@@ -39,7 +39,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiErrorResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
         log.info("Validations Error: {}", e.getMessage(), e);
         String firstError = "invalid field '" + e.getFieldErrors().get(0).getField() + "': " + e.getFieldErrors().get(0).getDefaultMessage();
-        ApiErrorResponse errorResponse = new ApiErrorResponse("INVALID_ARGUMENTS", firstError, HttpStatus.BAD_REQUEST.value());
+        ApiErrorResponse errorResponse = new ApiErrorResponse("BAD_REQUEST", firstError, HttpStatus.BAD_REQUEST.value());
         return ResponseEntity.status(errorResponse.getStatusCode()).body(errorResponse);
     }
 
