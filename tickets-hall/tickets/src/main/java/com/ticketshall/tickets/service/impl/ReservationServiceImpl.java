@@ -1,6 +1,6 @@
 package com.ticketshall.tickets.service.impl;
 
-import com.ticketshall.tickets.dto.ReservationRequest;
+import com.ticketshall.tickets.dto.request.ReservationRequest;
 import com.ticketshall.tickets.exceptions.TicketTypeLockTimeoutException;
 import com.ticketshall.tickets.exceptions.TicketTypeNotFoundException;
 import com.ticketshall.tickets.exceptions.TicketTypeStockNotEnoughException;

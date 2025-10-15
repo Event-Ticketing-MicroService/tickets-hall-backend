@@ -1,4 +1,4 @@
-package com.ticketshall.tickets.dto;
+package com.ticketshall.tickets.dto.request;
 
 import java.util.List;
 import java.util.UUID;

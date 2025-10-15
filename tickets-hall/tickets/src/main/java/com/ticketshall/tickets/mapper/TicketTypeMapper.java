@@ -1,6 +1,6 @@
 package com.ticketshall.tickets.mapper;
 
-import com.ticketshall.tickets.dto.CreateTicketTypeRequest;
+import com.ticketshall.tickets.dto.request.CreateTicketTypeRequest;
 import com.ticketshall.tickets.models.TicketType;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

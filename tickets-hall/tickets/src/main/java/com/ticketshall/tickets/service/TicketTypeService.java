@@ -1,7 +1,7 @@
 package com.ticketshall.tickets.service;
 
-import com.ticketshall.tickets.dto.CreateTicketTypeRequest;
-import com.ticketshall.tickets.dto.UpdateTicketTypeRequest;
+import com.ticketshall.tickets.dto.request.CreateTicketTypeRequest;
+import com.ticketshall.tickets.dto.request.UpdateTicketTypeRequest;
 import com.ticketshall.tickets.models.TicketType;
 
 import java.util.List;
