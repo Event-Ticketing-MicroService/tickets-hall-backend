@@ -3,23 +3,21 @@ package com.ticketshall.tickets.service.impl;
 import com.ticketshall.tickets.dto.CreateTicketTypeRequest;
 import com.ticketshall.tickets.dto.UpdateTicketTypeRequest;
 import com.ticketshall.tickets.mapper.TicketTypeMapper;
-import com.ticketshall.tickets.models.Ticket;
 import com.ticketshall.tickets.models.TicketType;
 import com.ticketshall.tickets.models.nonStoredModels.constants.GeneralConstants;
 import com.ticketshall.tickets.repository.EventRepository;
 import com.ticketshall.tickets.repository.TicketTypeRepository;
-import com.ticketshall.tickets.service.TicketService;
+import com.ticketshall.tickets.service.TicketTypeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class TicketServiceImpl implements TicketService {
+public class TicketTypeServiceImpl implements TicketTypeService {
 
     private final TicketTypeRepository ticketTypeRepository;
     private final EventRepository eventRepository;
