@@ -73,3 +73,7 @@ app:
       eventUpdated: event.updated.queue
       eventDeleted: event.deleted.queue
       dead-letter: final.dead.letter.queue
+
+payment:
+  service:
+    url: http://localhost:8001

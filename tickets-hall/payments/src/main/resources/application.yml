@@ -1,3 +1,4 @@
+
 spring:
   # Database Configuration
   datasource:
@@ -19,3 +20,6 @@ spring:
 stripe:
   secret:
     key: sk_test_51SHjrT3QPFFIs9vxhkozjU217GhieTJ7lZ5bHKhlQTWn5kacsMjZ0MbCNwONxiyTwn1j5vW5YiuZxHxQaKoWPzZQ00fs3xI7qO
+
+server:
+  port: 8001
