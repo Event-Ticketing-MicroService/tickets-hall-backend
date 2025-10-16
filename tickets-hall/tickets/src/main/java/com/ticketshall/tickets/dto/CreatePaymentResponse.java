@@ -1,16 +1,9 @@
 package com.ticketshall.tickets.dto;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
 
-@Getter
-@Setter
 @Builder
-@AllArgsConstructor
-public class CreatePaymentResponse {
-    String id;
-    String status;
-    String clientSecret;
+public record CreatePaymentResponse(String id,
+        String status,
+        String clientSecret) {
 }

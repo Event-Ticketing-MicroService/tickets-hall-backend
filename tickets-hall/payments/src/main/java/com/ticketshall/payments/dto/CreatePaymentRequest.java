@@ -1,12 +1,8 @@
 package com.ticketshall.payments.dto;
 
-import lombok.*;
+import lombok.Builder;
 
-@Getter
-@Setter
+
 @Builder
-@AllArgsConstructor
-public class CreatePaymentRequest {
-    private Float amount;
-    private String currency;
+public record CreatePaymentRequest(Float amount, String currency, String attendeeId, String eventId, String reservationId) {
 }
