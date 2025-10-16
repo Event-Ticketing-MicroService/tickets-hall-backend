@@ -9,5 +9,6 @@ import org.mapstruct.Mapping;
 public interface TicketTypeMapper {
     @Mapping(source = "stock", target = "totalStock")
     @Mapping(source = "stock", target = "availableStock")
+    @Mapping(target = "event", ignore = true)
     TicketType toTicketType(CreateTicketTypeRequest request);
 }

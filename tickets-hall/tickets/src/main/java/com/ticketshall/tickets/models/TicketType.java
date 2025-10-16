@@ -33,8 +33,8 @@ public final class TicketType {
     private LocalDateTime createdAtUtc;
     @UpdateTimestamp
     private LocalDateTime updatedAtUtc;
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "event_id", nullable = false)
     private Event event;
     @Column(name = "event_id", insertable = false, updatable = false)
     private UUID eventId;
