@@ -1,9 +1,12 @@
 package com.ticketshall.tickets.service.impl;
 
+import com.ticketshall.tickets.dto.CreatePaymentRequest;
+import com.ticketshall.tickets.dto.CreatePaymentResponse;
 import com.ticketshall.tickets.dto.request.ReservationRequest;
 import com.ticketshall.tickets.exceptions.TicketTypeLockTimeoutException;
 import com.ticketshall.tickets.exceptions.TicketTypeNotFoundException;
 import com.ticketshall.tickets.exceptions.TicketTypeStockNotEnoughException;
+import com.ticketshall.tickets.feign.PaymentServiceClient;
 import com.ticketshall.tickets.models.TicketType;
 import com.ticketshall.tickets.models.nonStoredModels.Reservation;
 import com.ticketshall.tickets.models.nonStoredModels.ReservationItem;
@@ -28,11 +31,12 @@ import java.util.concurrent.TimeUnit;
 public class ReservationServiceImpl implements ReservationService {
     private final TicketTypeRepository ticketTypeRepository;
     private final RedissonClient redissonClient;
+    private final PaymentServiceClient paymentServiceClient;
     private static final Duration EXPIRATION_TIME = Duration.ofMinutes(10);
     private static final Duration TTL = Duration.ofMinutes(12);
 
     @Override
-    public Reservation reserve(ReservationRequest request) {
+    public CreatePaymentResponse reserve(ReservationRequest request) {
         List<ReservationItem> reservationItems = new ArrayList<>();
         float totalPrice = 0;
 
@@ -75,7 +79,10 @@ public class ReservationServiceImpl implements ReservationService {
             }
         }
 
-        return createAndStoreReservation(request, reservationItems, totalPrice);
+        Reservation reservation = createAndStoreReservation(request, reservationItems, totalPrice);
+
+        CreatePaymentRequest paymentRequest = new CreatePaymentRequest(totalPrice, GeneralConstants.DEFAULT_CURRENCY, request.attendeeId().toString(), request.eventId().toString(), reservation.getId().toString());
+        return paymentServiceClient.createIntent(paymentRequest).getBody();
     }
 
     private String buildTicketTypeKey(UUID eventId, UUID ticketTypeId) {
