@@ -1,0 +1,28 @@
+package com.ticketshall.tickets.controller;
+
+import com.ticketshall.tickets.dto.request.ReservationRequest;
+import com.ticketshall.tickets.models.nonStoredModels.Reservation;
+import com.ticketshall.tickets.service.ReservationService;
+import lombok.RequiredArgsConstructor;
+import org.apache.coyote.Response;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
+
+@RestController
+@RequestMapping("/api/reservations")
+@RequiredArgsConstructor
+public class ReservationController {
+    private final ReservationService reservationService;
+    @PostMapping()
+    public ResponseEntity<Reservation> createReservation(@RequestBody ReservationRequest request) {
+        var result = reservationService.reserve(request);
+        return ResponseEntity.ok(result);
+    }
+    @PostMapping("/{reservationId}")
+    public ResponseEntity<Boolean> cancelReservation(@PathVariable("reservationId") String reservationId) {
+        reservationService.expireReservation(UUID.fromString(reservationId));
+        return ResponseEntity.ok(true);
+    }
+}
