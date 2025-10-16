@@ -53,6 +53,7 @@ app:
       user: user.exchange
       event: event.exchange
       ticket: ticket.exchange
+      payment: payment.exchange
       dead-letter: deadLetter.exchange
     routing:
       userCreated: user.created
@@ -64,6 +65,8 @@ app:
       ticketCreated: ticket.created
       ticketUpdated: ticket.updated
       ticketDeleted: ticket.deleted
+      paymentSucceeded: payment.succeeded
+      paymentFailed: payment.failed
       dead-letter: dead.letter
     queues:
       userCreated: user.created.queue
@@ -72,6 +75,8 @@ app:
       eventCreated: event.created.queue
       eventUpdated: event.updated.queue
       eventDeleted: event.deleted.queue
+      paymentSucceeded: payment.succeeded.queue
+      paymentFailed: payment.failed.queue
       dead-letter: final.dead.letter.queue
 
 payment:
