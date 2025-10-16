@@ -52,17 +52,15 @@ public class TicketTypeServiceImpl implements TicketTypeService {
         // if not found in cache
         // Update Fields In cache
         // Update Fields in Database
-        var event = eventRepository.findById(request.eventId())
-                .orElseThrow(() -> new IllegalArgumentException("Event not found: " + request.eventId()));
-        if (event.getReservationStartsAtUtc().isBefore(LocalDateTime.now())){
-            throw new IllegalArgumentException("TicketType can't be updated because the reservations already started");
-        }
         var cacheKey = getEventTicketTypesKey(request.eventId());
         List<TicketType> cached = (List<TicketType>)redisTemplate.opsForValue().get(cacheKey);
         int newAvailableStock;
         if (cached != null && !cached.isEmpty()) {
             for (TicketType type : cached) {
                 if (type.getId().equals(request.id())) {
+                    if(type.getReservationsStartsAtUtc().isBefore(LocalDateTime.now())){
+                        throw new IllegalArgumentException("TicketType can't be updated because the reservations already started");
+                    }
                     newAvailableStock = type.getAvailableStock() - (request.stock() - type.getTotalStock());
                     if(newAvailableStock < 0) {
                         throw new IllegalArgumentException("the new Available Stock can't be negative " + type.getName());
@@ -88,7 +86,7 @@ public class TicketTypeServiceImpl implements TicketTypeService {
 
         return type;
     }
-
+    // TODO: make custom Exceptions
     @Override
     public boolean deleteTicketType(UUID ticketTypeId) {
         // remove from cache
@@ -96,10 +94,8 @@ public class TicketTypeServiceImpl implements TicketTypeService {
         // put constraint not to delete if reservations are open
         var dbType = ticketTypeRepository.findById(ticketTypeId)
                 .orElseThrow(() -> new TicketTypeNotFoundException("TicketType not found: " + ticketTypeId));
-        var event = eventRepository.findById(dbType.getEventId())
-                .orElseThrow(() -> new IllegalArgumentException("Event not found: " + dbType.getEventId()));
-        if (event.getReservationStartsAtUtc().isBefore(LocalDateTime.now())){
-            throw new IllegalArgumentException("TicketType can't be updated because the reservations already started");
+        if(dbType.getReservationsStartsAtUtc().isBefore(LocalDateTime.now())){
+            throw new IllegalArgumentException("TicketType can't be deleted because the reservations already started");
         }
         var cacheKey = getEventTicketTypesKey(dbType.getEventId());
         List<TicketType> cached = (List<TicketType>)redisTemplate.opsForValue().get(cacheKey);

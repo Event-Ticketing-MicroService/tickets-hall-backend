@@ -2,6 +2,7 @@ package com.ticketshall.tickets.dto.request;
 
 import jakarta.validation.constraints.*;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 public record CreateTicketTypeRequest(
@@ -9,4 +10,6 @@ public record CreateTicketTypeRequest(
         @Size(max = 512, min = 10, message = "Description should be between 10 and 512 characters") String description,
         @PositiveOrZero Float price,
         @PositiveOrZero Integer stock,
-        UUID eventId){}
+        UUID eventId,
+        LocalDate reservationsStartsAtUtc,
+        LocalDate reservationsEndsAtUtc){}

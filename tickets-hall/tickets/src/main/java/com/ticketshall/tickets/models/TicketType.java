@@ -27,6 +27,8 @@ public final class TicketType {
     private Float price;
     private Integer totalStock;
     private Integer availableStock;
+    private LocalDateTime reservationsStartsAtUtc;
+    private LocalDateTime reservationsEndsAtUtc;
     @CreationTimestamp
     private LocalDateTime createdAtUtc;
     @UpdateTimestamp
