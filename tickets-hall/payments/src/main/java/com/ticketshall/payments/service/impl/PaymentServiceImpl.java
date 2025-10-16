@@ -7,10 +7,13 @@ import com.stripe.net.Webhook;
 import com.ticketshall.payments.dto.CreatePaymentRequest;
 import com.ticketshall.payments.dto.CreatePaymentResponse;
 import com.ticketshall.payments.entity.Payment;
+import com.ticketshall.payments.mq.events.PaymentFailedEvent;
+import com.ticketshall.payments.mq.events.PaymentSucceededEvent;
+import com.ticketshall.payments.mq.producer.PaymentEventProducer;
 import com.ticketshall.payments.repository.PaymentRepo;
 import com.ticketshall.payments.service.PaymentService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -20,17 +23,19 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PaymentServiceImpl implements PaymentService {
     @Value("${stripe.webhook.secret}")
     private String webhookSecret;
 
     private final PaymentRepo paymentRepo;
+    private final PaymentEventProducer paymentEventProducer;
 
     @Override
     public CreatePaymentResponse createPayment(CreatePaymentRequest request) throws StripeException {
         Map<String, Object> params = new HashMap<>();
-        params.put("amount", request.getAmount());
-        params.put("currency", request.getCurrency());
+        params.put("amount", request.amount());
+        params.put("currency", request.currency());
         params.put("automatic_payment_methods", Map.of("enabled", true));
 
         PaymentIntent paymentIntent = PaymentIntent.create(params);
@@ -38,8 +43,11 @@ public class PaymentServiceImpl implements PaymentService {
         Payment payment = Payment.builder()
                 .paymentIntentId(paymentIntent.getId())
                 .clientSecret(paymentIntent.getClientSecret())
-                .amount(request.getAmount())
-                .currency(request.getCurrency())
+                .amount(request.amount())
+                .attendeeId(request.attendeeId())
+                .eventId(request.eventId())
+                .reservationId(request.reservationId())
+                .currency(request.currency())
                 .status(paymentIntent.getStatus())
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
@@ -58,25 +66,37 @@ public class PaymentServiceImpl implements PaymentService {
     public String handleWebhook(String payload, String sigHeader) {
         try {
             Event event = Webhook.constructEvent(payload, sigHeader, webhookSecret);
-            if ("payment_intent.succeeded".equals(event.getType())) {
-                PaymentIntent paymentIntent = (PaymentIntent) event.getDataObjectDeserializer().getObject().orElse(null);
-
-                if (paymentIntent != null) {
-                    // set payment in database
-                    Payment payment = paymentRepo.findByPaymentIntentId(paymentIntent.getId())
-                            .orElseThrow(() -> new RuntimeException("Payment not found for intent: " + paymentIntent.getId()));
-
-                    payment.setStatus(paymentIntent.getStatus());
-                    payment.setUpdatedAt(LocalDateTime.now());
-                    paymentRepo.save(payment);
-
-                    // ToDo: send a payment success event in rabbitmq
-
-                }
+            switch (event.getType()) {
+                case "payment_intent.succeeded" -> handlePaymentEvent(event, true);
+                case "payment_intent.failed" -> handlePaymentEvent(event, false);
+                default -> log.info("Unhandled event type: {}", event.getType());
             }
             return "OK";
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private void handlePaymentEvent(Event event, boolean succeeded) {
+        PaymentIntent paymentIntent = (PaymentIntent) event.getDataObjectDeserializer().getObject().orElse(null);
+
+        if (paymentIntent != null) {
+            // set payment in database
+            Payment payment = paymentRepo.findByPaymentIntentId(paymentIntent.getId())
+                    .orElseThrow(() -> new RuntimeException("Payment not found for intent: " + paymentIntent.getId()));
+
+            payment.setStatus(paymentIntent.getStatus());
+            payment.setUpdatedAt(LocalDateTime.now());
+            paymentRepo.save(payment);
+
+            // publish payment success event in rabbitmq
+            if (succeeded) {
+                PaymentSucceededEvent paymentSucceededEvent = new PaymentSucceededEvent(payment.getReservationId());
+                paymentEventProducer.publishPaymentSucceededEvent(paymentSucceededEvent);
+            } else {
+                PaymentFailedEvent paymentFailedEvent = new PaymentFailedEvent(payment.getReservationId());
+                paymentEventProducer.publishPaymentFailedEvent(paymentFailedEvent);
+            }
         }
     }
 }

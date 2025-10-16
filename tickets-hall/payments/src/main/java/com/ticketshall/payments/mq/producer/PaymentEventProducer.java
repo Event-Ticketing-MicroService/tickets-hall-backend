@@ -1,5 +1,7 @@
 package com.ticketshall.payments.mq.producer;
 
+import com.ticketshall.payments.mq.events.PaymentFailedEvent;
+import com.ticketshall.payments.mq.events.PaymentSucceededEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,7 +19,11 @@ public class PaymentEventProducer {
     @Value("${app.rabbitmq.routing.paymentFailed}")
     private String paymentFailedRoutingKey;
 
-    public void publishPaymentSucceededEvent() {
+    public void publishPaymentSucceededEvent(PaymentSucceededEvent paymentSucceededEvent) {
+        rabbitTemplate.convertAndSend(paymentExchangeName, paymentSucceededRoutingKey, paymentSucceededEvent);
+    }
 
+    public void publishPaymentFailedEvent(PaymentFailedEvent paymentFailedEvent) {
+        rabbitTemplate.convertAndSend(paymentExchangeName, paymentFailedRoutingKey, paymentFailedEvent);
     }
 }

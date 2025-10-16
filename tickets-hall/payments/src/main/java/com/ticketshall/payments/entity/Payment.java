@@ -23,6 +23,9 @@ public class Payment {
     private String paymentIntentId;
     private String status;
     private Float amount;
+    private String attendeeId;
+    private String eventId;
+    private String reservationId;
     private String clientSecret;
     private String currency;
     private LocalDateTime createdAt;
