@@ -10,7 +10,8 @@ import com.ticketshall.tickets.repository.EventRepository;
 import com.ticketshall.tickets.repository.TicketTypeRepository;
 import com.ticketshall.tickets.service.TicketTypeService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.redisson.api.RList;
+import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -24,7 +25,7 @@ public class TicketTypeServiceImpl implements TicketTypeService {
     private final TicketTypeRepository ticketTypeRepository;
     private final EventRepository eventRepository;
     private final TicketTypeMapper ticketTypeMapper;
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final RedissonClient redissonClient;
     // TODO: make the TTL until the Event is over
     //private static final Duration CACHE_TTL = Duration.ofMinutes(30);
 
@@ -35,28 +36,28 @@ public class TicketTypeServiceImpl implements TicketTypeService {
         }
 
         var ticketType = ticketTypeMapper.toTicketType(request);
+        ticketType.setEvent(eventRepository.getReferenceById(request.eventId()));
         ticketTypeRepository.save(ticketType);
+
         // AppendToCache don't update the full list
         var cacheKey = getEventTicketTypesKey(request.eventId());
-        List<TicketType> cached = (List<TicketType>)redisTemplate.opsForValue().get(cacheKey);
-        if (cached != null && !cached.isEmpty()) {
-            cached.add(ticketType);
-            redisTemplate.opsForValue().set(cacheKey, cached);
+        RList<TicketType> cachedList = redissonClient.getList(cacheKey);
+        if (cachedList.isExists() && !cachedList.isEmpty()) {
+            cachedList.add(ticketType);
         }
         return ticketType;
     }
 
     @Override
     public TicketType updateTicketType(UpdateTicketTypeRequest request) {
-        // Check Cache First
-        // if not found in cache
-        // Update Fields In cache
-        // Update Fields in Database
         var cacheKey = getEventTicketTypesKey(request.eventId());
-        List<TicketType> cached = (List<TicketType>)redisTemplate.opsForValue().get(cacheKey);
+        RList<TicketType> cachedList = redissonClient.getList(cacheKey);
         int newAvailableStock;
-        if (cached != null && !cached.isEmpty()) {
-            for (TicketType type : cached) {
+
+        if (cachedList.isExists() && !cachedList.isEmpty()) {
+            List<TicketType> cached = cachedList.readAll();
+            for (int i = 0; i < cached.size(); i++) {
+                TicketType type = cached.get(i);
                 if (type.getId().equals(request.id())) {
                     if(type.getReservationsStartsAtUtc().isBefore(LocalDateTime.now())){
                         throw new IllegalArgumentException("TicketType can't be updated because the reservations already started");
@@ -69,7 +70,8 @@ public class TicketTypeServiceImpl implements TicketTypeService {
                     type.setPrice(request.price());
                     type.setTotalStock(request.stock());
                     type.setAvailableStock(newAvailableStock);
-                    redisTemplate.opsForValue().set(cacheKey, cached);
+                    cachedList.set(i, type);
+                    ticketTypeRepository.save(type);
                     return type;
                 }
             }
@@ -86,23 +88,24 @@ public class TicketTypeServiceImpl implements TicketTypeService {
 
         return type;
     }
-    // TODO: make custom Exceptions
+
     @Override
     public boolean deleteTicketType(UUID ticketTypeId) {
-        // remove from cache
-        // remove from DB
-        // put constraint not to delete if reservations are open
         var dbType = ticketTypeRepository.findById(ticketTypeId)
                 .orElseThrow(() -> new TicketTypeNotFoundException("TicketType not found: " + ticketTypeId));
         if(dbType.getReservationsStartsAtUtc().isBefore(LocalDateTime.now())){
             throw new IllegalArgumentException("TicketType can't be deleted because the reservations already started");
         }
+
         var cacheKey = getEventTicketTypesKey(dbType.getEventId());
-        List<TicketType> cached = (List<TicketType>)redisTemplate.opsForValue().get(cacheKey);
-        if (cached != null && !cached.isEmpty()) {
-            cached.removeIf(t -> t.getId().equals(ticketTypeId));
-            redisTemplate.opsForValue().set(cacheKey, cached);
-            return true;
+        RList<TicketType> cachedList = redissonClient.getList(cacheKey);
+
+        if (cachedList.isExists() && !cachedList.isEmpty()) {
+            List<TicketType> filtered = cachedList.readAll().stream()
+                    .filter(t -> !t.getId().equals(ticketTypeId))
+                    .toList();
+            cachedList.clear();
+            cachedList.addAll(filtered);
         }
 
         ticketTypeRepository.delete(dbType);
@@ -112,13 +115,15 @@ public class TicketTypeServiceImpl implements TicketTypeService {
     @Override
     public List<TicketType> listTicketTypesForEvent(UUID eventId) {
         String cacheKey = getEventTicketTypesKey(eventId);
-        List<TicketType> cached = (List<TicketType>) redisTemplate.opsForValue().get(cacheKey);
-        if (cached != null && !cached.isEmpty()) {
-            return cached;
+        RList<TicketType> cachedList = redissonClient.getList(cacheKey);
+
+        if (cachedList.isExists() && !cachedList.isEmpty()) {
+            return cachedList.readAll();
         }
+
         List<TicketType> ticketTypes = ticketTypeRepository.getTicketTypesByEventId(eventId);
         if(!ticketTypes.isEmpty()) {
-            redisTemplate.opsForValue().set(cacheKey, ticketTypes);
+            cachedList.addAll(ticketTypes);
         }
 
         return ticketTypes;
