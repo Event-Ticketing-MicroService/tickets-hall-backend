@@ -24,4 +24,10 @@ public class PaymentController {
         return ResponseEntity.ok(paymentService.handleWebhook(payload, sigHeader));
     }
 
+    @PostMapping("/cancel/{paymentIntentId}")
+    public ResponseEntity<Void> cancelPayment(@PathVariable String paymentIntentId) throws StripeException {
+        paymentService.cancelPayment(paymentIntentId);
+        return ResponseEntity.noContent().build();
+    }
+
 }

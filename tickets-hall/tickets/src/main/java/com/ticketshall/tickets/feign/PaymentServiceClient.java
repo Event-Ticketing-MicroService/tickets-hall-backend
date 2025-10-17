@@ -4,6 +4,7 @@ import com.ticketshall.tickets.dto.CreatePaymentRequest;
 import com.ticketshall.tickets.dto.CreatePaymentResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -11,4 +12,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 public interface PaymentServiceClient {
     @PostMapping("/api/payments/create-intent")
     public ResponseEntity<CreatePaymentResponse> createIntent(@RequestBody CreatePaymentRequest request);
+    @PostMapping("/api/payments/cancel/{paymentIntentId}")
+    public ResponseEntity<Void> cancelPayment(@PathVariable String paymentIntentId);
 }
