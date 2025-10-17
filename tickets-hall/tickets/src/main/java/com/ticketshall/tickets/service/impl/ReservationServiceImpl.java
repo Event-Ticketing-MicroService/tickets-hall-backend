@@ -124,10 +124,15 @@ public class ReservationServiceImpl implements ReservationService {
         Map<String, String> map = new HashMap<>();
         map.put("id", type.getId().toString());
         map.put("eventId", type.getEventId().toString());
+        map.put("description", type.getDescription());
         map.put("name", type.getName());
         map.put("price", type.getPrice().toString());
         map.put("totalStock", String.valueOf(type.getTotalStock()));
         map.put("availableStock", String.valueOf(type.getAvailableStock()));
+        map.put("reservationsStartsAtUtc", type.getReservationsStartsAtUtc().toString());
+        map.put("reservationsEndsAtUtc", type.getReservationsEndsAtUtc().toString());
+        map.put("createdAtUtc", type.getCreatedAtUtc().toString());
+        map.put("updatedAtUtc", type.getUpdatedAtUtc().toString());
         hashMap.putAll(map);
     }
 
@@ -139,6 +144,11 @@ public class ReservationServiceImpl implements ReservationService {
         type.setPrice(Float.parseFloat(data.get("price")));
         type.setTotalStock(Integer.parseInt(data.get("totalStock")));
         type.setAvailableStock(Integer.parseInt(data.get("availableStock")));
+        type.setDescription(data.get("description"));
+        type.setReservationsStartsAtUtc(LocalDateTime.parse(data.get("reservationsStartsAtUtc")));
+        type.setReservationsEndsAtUtc(LocalDateTime.parse(data.get("reservationsEndsAtUtc")));
+        type.setCreatedAtUtc(LocalDateTime.parse(data.get("createdAtUtc")));
+        type.setUpdatedAtUtc(LocalDateTime.parse(data.get("updatedAtUtc")));
         return type;
     }
 
