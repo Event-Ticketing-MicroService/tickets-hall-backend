@@ -1,25 +1,32 @@
 package com.ticketshall.events.controllers;
 
 import com.ticketshall.events.dtos.params.CreateEventParams;
-import com.ticketshall.events.dtos.responses.ListResponse;
-import com.ticketshall.events.exceptions.BadRequestException;
+import com.ticketshall.events.models.Event;
+import com.ticketshall.events.services.EventService;
+import com.ticketshall.events.validations.EventValidator;
+import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
-import java.util.List;
 
 @RequestMapping("/events")
 @RestController
 public class EventsController {
-    @GetMapping("")
-    ResponseEntity<?> find()  {
-        List<CreateEventParams> mockEvents = List.of(
-                new CreateEventParams(1, "a", "aa"),
-                new CreateEventParams(2, "b", "bb"),
-                new CreateEventParams(3, "c", "cc")
-        );
+    private final EventService eventService;
 
-        return ResponseEntity.ok().body(new ListResponse<>(mockEvents, 180));
+    @Autowired
+    public EventsController(EventService eventService) {
+        this.eventService = eventService;
+    }
+
+    @PostMapping("")
+    ResponseEntity<?> createEvent(@Valid @RequestBody CreateEventParams createEventParams) {
+        EventValidator eventValidator = new EventValidator(createEventParams);
+        eventValidator.validate();
+
+        Event event = eventService.createEvent(createEventParams);
+
+        return ResponseEntity.ok(event);
     }
 }
