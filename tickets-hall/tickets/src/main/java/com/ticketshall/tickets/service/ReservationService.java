@@ -7,5 +7,5 @@ import java.util.UUID;
 
 public interface ReservationService {
     CreatePaymentResponse reserve(ReservationRequest request);
-    void expireReservation(UUID reservationId);
+    void expireReservation(UUID reservationId, boolean recoverStock);
 }

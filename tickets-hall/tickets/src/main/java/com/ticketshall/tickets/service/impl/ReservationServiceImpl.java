@@ -165,10 +165,18 @@ public class ReservationServiceImpl implements ReservationService {
     private Reservation createAndStoreReservation(ReservationRequest request, List<ReservationItem> items, float totalPrice) {
         UUID reservationId = UUID.randomUUID();
 
+        CreatePaymentRequest paymentRequest = new CreatePaymentRequest(totalPrice, GeneralConstants.DEFAULT_CURRENCY, request.attendeeId().toString(), request.eventId().toString(), reservationId.toString());
+        CreatePaymentResponse response = paymentServiceClient.createIntent(paymentRequest).getBody();
+
+        if (response == null) {
+            throw new RuntimeException("Failed to create reservation");
+        }
+
         Reservation reservation = new Reservation(
                 reservationId,
                 request.attendeeId(),
                 request.eventId(),
+                response.id(),
                 items,
                 totalPrice,
                 LocalDateTime.now().plus(EXPIRATION_TIME)
@@ -181,13 +189,17 @@ public class ReservationServiceImpl implements ReservationService {
         return reservation;
     }
 
-    public void expireReservation(UUID reservationId) {
+    public void expireReservation(UUID reservationId, boolean recoverStock) {
         String redisKey = String.format("%s%s", GeneralConstants.REDIS_RESERVATION_PREFIX, reservationId);
         RBucket<Reservation> bucket = redissonClient.getBucket(redisKey);
         Reservation reservation = bucket.get();
 
         if (reservation == null) return;
 
+        if (!recoverStock) {
+            bucket.delete();
+            return;
+        }
         for (ReservationItem item : reservation.getItems()) {
             String ticketTypeKey = buildTicketTypeKey(reservation.getEventId(), item.getTicketTypeId());
 

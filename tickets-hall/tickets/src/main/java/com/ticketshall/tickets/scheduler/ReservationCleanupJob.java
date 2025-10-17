@@ -1,5 +1,6 @@
 package com.ticketshall.tickets.scheduler;
 
+import com.ticketshall.tickets.feign.PaymentServiceClient;
 import com.ticketshall.tickets.models.nonStoredModels.Reservation;
 import com.ticketshall.tickets.service.ReservationService;
 import lombok.RequiredArgsConstructor;
@@ -7,22 +8,19 @@ import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RBucket;
 import org.redisson.api.RKeys;
 import org.redisson.api.RedissonClient;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
-import java.util.Set;
-import java.util.UUID;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class ReservationCleanupJob {
     private final ReservationService reservationService;
-    private final RedisTemplate<String, Object> redisTemplate;
     private static final String RESERVATION_PREFIX = "reservation:";
     private final RedissonClient redissonClient;
+    private final PaymentServiceClient paymentServiceClient;
 
     @Scheduled(fixedRate = 60000)
     public void cleanupExpiredReservations() {
@@ -36,8 +34,8 @@ public class ReservationCleanupJob {
             if (reservation == null) continue;
 
             if (reservation.getExpiresAtUtc().isBefore(LocalDateTime.now())) {
-                // ToDo: Cancel Stripe session
-                reservationService.expireReservation(reservation.getId()); // Restore stock
+                paymentServiceClient.cancelPayment(reservation.getPaymentIntentId());
+                reservationService.expireReservation(reservation.getId(), true); // Restore stock
             }
         }
     }
