@@ -4,11 +4,11 @@ server:
 spring:
   # Database Configuration
   datasource:
-    url: jdbc:postgresql://localhost:5432/attendance?createDatabaseIfNotExist=true
+    url: jdbc:postgresql://localhost:5432/tickets
     username: postgres
     password: postgres
     driver-class-name: org.postgresql.Driver
-  
+
   # JPA/Hibernate Configuration
   jpa:
     hibernate:
@@ -18,14 +18,17 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         '[format_sql]': true
-  
+
   # Redis Configuration
   data:
     redis:
       host: localhost
       port: 6379
       timeout: 2000ms
-  
+      
+  cache:
+    type: redis
+
   # RabbitMQ Configuration
   rabbitmq:
     host: localhost
@@ -50,6 +53,7 @@ app:
       user: user.exchange
       event: event.exchange
       ticket: ticket.exchange
+      payment: payment.exchange
       dead-letter: deadLetter.exchange
     routing:
       userCreated: user.created
@@ -61,6 +65,8 @@ app:
       ticketCreated: ticket.created
       ticketUpdated: ticket.updated
       ticketDeleted: ticket.deleted
+      paymentSucceeded: payment.succeeded
+      paymentFailed: payment.failed
       dead-letter: dead.letter
     queues:
       userCreated: user.created.queue
@@ -69,7 +75,10 @@ app:
       eventCreated: event.created.queue
       eventUpdated: event.updated.queue
       eventDeleted: event.deleted.queue
-      ticketCreated: ticket.created.queue
-      ticketUpdated: ticket.updated.queue
-      ticketDeleted: ticket.deleted.queue
+      paymentSucceeded: payment.succeeded.queue
+      paymentFailed: payment.failed.queue
       dead-letter: final.dead.letter.queue
+
+payment:
+  service:
+    url: http://localhost:8001
