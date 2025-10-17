@@ -41,7 +41,7 @@ public class TicketType {
     @Column(nullable = false)
     private Integer quantity;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String planDescription;
 
     @CreationTimestamp
