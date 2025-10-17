@@ -99,4 +99,16 @@ public class PaymentServiceImpl implements PaymentService {
             }
         }
     }
+
+    @Override
+    public void cancelPayment(String paymentIntentId) throws StripeException {
+        PaymentIntent paymentIntent = PaymentIntent.retrieve(paymentIntentId);
+        paymentIntent.cancel();
+
+        paymentRepo.findByPaymentIntentId(paymentIntentId).ifPresent(payment -> {
+            payment.setStatus("cancelled");
+            payment.setUpdatedAt(LocalDateTime.now());
+            paymentRepo.save(payment);
+        });
+    }
 }

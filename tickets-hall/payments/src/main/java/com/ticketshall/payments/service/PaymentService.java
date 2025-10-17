@@ -7,4 +7,5 @@ import com.ticketshall.payments.dto.CreatePaymentResponse;
 public interface PaymentService {
     public CreatePaymentResponse createPayment(CreatePaymentRequest request) throws StripeException;
     public String handleWebhook(String payload, String sigHeader);
+    public void cancelPayment(String paymentIntentId) throws StripeException;
 }
