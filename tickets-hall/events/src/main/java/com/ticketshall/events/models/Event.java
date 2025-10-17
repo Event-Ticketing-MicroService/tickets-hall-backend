@@ -33,7 +33,7 @@ public class Event {
     @JoinColumn(name = "category_id", nullable = false, updatable = false, insertable = false)
     private Category category;
 
-    @OneToMany(fetch = FetchType.LAZY, orphanRemoval = true, cascade = {CascadeType.REMOVE})
+    @OneToMany(fetch = FetchType.LAZY, orphanRemoval = true, cascade = CascadeType.ALL)
     @JoinColumn(name = "event_id")
     private List<TicketType> ticketTypes = new ArrayList<>();
 
