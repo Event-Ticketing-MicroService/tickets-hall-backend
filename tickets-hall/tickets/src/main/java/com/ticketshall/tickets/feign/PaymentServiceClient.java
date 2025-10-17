@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 @FeignClient(name = "payment-service", url = "${payment.service.url}")
 public interface PaymentServiceClient {
-    @PostMapping("/api/payments/create-intent")
+    @PostMapping("/api/payments")
     public ResponseEntity<CreatePaymentResponse> createIntent(@RequestBody CreatePaymentRequest request);
     @PostMapping("/api/payments/cancel/{paymentIntentId}")
     public ResponseEntity<Void> cancelPayment(@PathVariable String paymentIntentId);
