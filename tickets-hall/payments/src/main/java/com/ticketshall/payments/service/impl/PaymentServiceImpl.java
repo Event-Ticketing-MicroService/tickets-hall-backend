@@ -34,7 +34,7 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public CreatePaymentResponse createPayment(CreatePaymentRequest request) throws StripeException {
         Map<String, Object> params = new HashMap<>();
-        params.put("amount", request.amount());
+        params.put("amount", (long)(request.amount() * 100));
         params.put("currency", request.currency());
         params.put("automatic_payment_methods", Map.of("enabled", true));
 
@@ -65,6 +65,7 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public String handleWebhook(String payload, String sigHeader) {
         try {
+            log.error("Received webhook: {}", payload);
             Event event = Webhook.constructEvent(payload, sigHeader, webhookSecret);
             switch (event.getType()) {
                 case "payment_intent.succeeded" -> handlePaymentEvent(event, true);
@@ -79,7 +80,6 @@ public class PaymentServiceImpl implements PaymentService {
 
     private void handlePaymentEvent(Event event, boolean succeeded) {
         PaymentIntent paymentIntent = (PaymentIntent) event.getDataObjectDeserializer().getObject().orElse(null);
-
         if (paymentIntent != null) {
             // set payment in database
             Payment payment = paymentRepo.findByPaymentIntentId(paymentIntent.getId())
