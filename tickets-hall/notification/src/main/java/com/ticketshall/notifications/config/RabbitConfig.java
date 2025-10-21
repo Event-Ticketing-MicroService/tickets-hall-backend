@@ -12,6 +12,7 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class RabbitConfig {
+
     @Value("${app.rabbitmq.exchanges.user}")
     private String userExchangeName;
 
@@ -53,6 +54,27 @@ public class RabbitConfig {
 
     @Value("${app.rabbitmq.queues.eventDeleted}")
     private String eventDeletedQueueName;
+
+    @Value("${app.rabbitmq.exchanges.ticket}")
+    private String ticketExchangeName;
+
+    @Value("${app.rabbitmq.routing.ticketCreated}")
+    private String ticketCreatedRoutingKey;
+
+    @Value("${app.rabbitmq.routing.ticketUpdated}")
+    private String ticketUpdatedRoutingKey;
+
+    @Value("${app.rabbitmq.routing.ticketDeleted}")
+    private String ticketDeletedRoutingKey;
+
+    @Value("${app.rabbitmq.queues.ticketCreated}")
+    private String ticketCreatedQueueName;
+
+    @Value("${app.rabbitmq.queues.ticketUpdated}")
+    private String ticketUpdatedQueueName;
+
+    @Value("${app.rabbitmq.queues.ticketDeleted}")
+    private String ticketDeletedQueueName;
 
     @Value("${app.rabbitmq.exchanges.dead-letter}")
     private String deadLetterExchangeName;
@@ -163,6 +185,56 @@ public class RabbitConfig {
                 .with(eventDeletedRoutingKey);
     }
 
+    @Bean
+    DirectExchange ticketExchange() {
+        return new DirectExchange(ticketExchangeName);
+    }
+
+    @Bean
+    Queue ticketCreatedQueue() {
+        return QueueBuilder.durable(ticketCreatedQueueName)
+                .withArgument("x-dead-letter-exchange", deadLetterExchangeName)
+                .withArgument("x-dead-letter-routing-key", deadLetterRoutingKey)
+                .build();
+    }
+
+    @Bean
+    Binding ticketCreatedBinding() {
+        return BindingBuilder.bind(ticketCreatedQueue())
+                .to(ticketExchange())
+                .with(ticketCreatedRoutingKey);
+    }
+
+    @Bean
+    Queue ticketUpdatedQueue() {
+        return QueueBuilder.durable(ticketUpdatedQueueName)
+                .withArgument("x-dead-letter-exchange", deadLetterExchangeName)
+                .withArgument("x-dead-letter-routing-key", deadLetterRoutingKey)
+                .build();
+    }
+
+    @Bean
+    Binding ticketUpdatedBinding() {
+        return BindingBuilder.bind(ticketUpdatedQueue())
+                .to(ticketExchange())
+                .with(ticketUpdatedRoutingKey);
+    }
+
+    @Bean
+    Queue ticketDeletedQueue() {
+        return QueueBuilder.durable(ticketDeletedQueueName)
+                .withArgument("x-dead-letter-exchange", deadLetterExchangeName)
+                .withArgument("x-dead-letter-routing-key", deadLetterRoutingKey)
+                .build();
+    }
+
+    @Bean
+    Binding ticketDeletedBinding() {
+        return BindingBuilder.bind(ticketDeletedQueue())
+                .to(ticketExchange())
+                .with(ticketDeletedRoutingKey);
+    }
+
     // Final DLQ
     @Bean
     DirectExchange deadLetterExchange() {
@@ -193,3 +265,4 @@ public class RabbitConfig {
         return template;
     }
 }
+
