@@ -70,4 +70,7 @@ app:
       eventCreated: event.created.queue
       eventUpdated: event.updated.queue
       eventDeleted: event.deleted.queue
+      ticketCreated: ticket.created.queue
+      ticketUpdated: ticket.updated.queue
+      ticketDeleted: ticket.deleted.queue
       dead-letter: final.dead.letter.queue
