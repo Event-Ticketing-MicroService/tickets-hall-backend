@@ -1,0 +1,22 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: api-gateway
+  namespace: tickets-hall
+  annotations:
+    nginx.ingress.kubernetes.io/auth-jwt-key: "secret://jwt-secret"
+    nginx.ingress.kubernetes.io/auth-jwt-realm: "Protected API"
+    nginx.ingress.kubernetes.io/auth-jwt-token: "$http_authorization"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: api.ticketshall.com
+      http:
+        paths:
+          - path: /api/v1/customers/
+            pathType: Prefix
+            backend:
+              service:
+                name: customers-service
+                port:
+                  number: 80
