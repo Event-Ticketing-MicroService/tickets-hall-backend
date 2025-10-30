@@ -1,6 +1,7 @@
 package com.ticketshall.events.controllers;
 
 import com.ticketshall.events.dtos.params.CreateEventParams;
+import com.ticketshall.events.dtos.params.PublishEventParams;
 import com.ticketshall.events.dtos.responses.EventDTO;
 import com.ticketshall.events.dtos.responses.ListResponse;
 import com.ticketshall.events.dtos.filterparams.EventFilterParams;
@@ -65,6 +66,14 @@ public class EventsController {
     }
 
     // TODO: publish event
+    @PutMapping("/{id}/publish")
+    ResponseEntity<?> publishEvent(
+            @PathVariable UUID id,
+            @RequestBody PublishEventParams publishEventParams
+    ) {
+        eventService.publishEvent(id, publishEventParams);
+        return ResponseEntity.noContent().build();
+    }
 
     // TODO: update event
 }
