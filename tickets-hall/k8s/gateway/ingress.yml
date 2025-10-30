@@ -1,0 +1,31 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: tickets-hall-ingress
+  namespace: tickets-hall
+  annotations:
+    nginx.ingress.kubernetes.io/auth-url: "http://auth-service.tickets-hall.svc.cluster.local:8080/auth"
+    nginx.ingress.kubernetes.io/auth-response-headers: "X-User-Role,X-User-Id,X-User-Sub"
+    nginx.ingress.kubernetes.io/auth-request-headers: "authorization,x-original-uri,x-original-method"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: tickets-hall.local
+      http:
+        paths:
+          # Regular attendance endpoints - requires authentication but no specific role
+          - path: /attendance/api/attendances
+            pathType: Prefix
+            backend:
+              service:
+                name: attendance-service
+                port:
+                  number: 80
+          # Admin endpoints - will require admin role (handled by auth service)
+          - path: /attendance/admin
+            pathType: Prefix
+            backend:
+              service:
+                name: attendance-service
+                port:
+                  number: 80

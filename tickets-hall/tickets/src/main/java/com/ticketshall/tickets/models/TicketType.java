@@ -27,12 +27,14 @@ public final class TicketType {
     private Float price;
     private Integer totalStock;
     private Integer availableStock;
+    private LocalDateTime reservationsStartsAtUtc;
+    private LocalDateTime reservationsEndsAtUtc;
     @CreationTimestamp
     private LocalDateTime createdAtUtc;
     @UpdateTimestamp
     private LocalDateTime updatedAtUtc;
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "event_id", nullable = false)
     private Event event;
     @Column(name = "event_id", insertable = false, updatable = false)
     private UUID eventId;

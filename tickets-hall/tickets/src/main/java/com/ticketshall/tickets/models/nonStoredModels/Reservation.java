@@ -14,6 +14,7 @@ public class Reservation {
     private UUID id;
     private UUID attendeeId;
     private UUID eventId;
+    private String paymentIntentId;
     private List<ReservationItem> items;
     private float totalPrice;
     private LocalDateTime expiresAtUtc;

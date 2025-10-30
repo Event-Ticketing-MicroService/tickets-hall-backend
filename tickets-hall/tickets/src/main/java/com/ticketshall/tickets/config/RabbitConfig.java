@@ -54,6 +54,21 @@ public class RabbitConfig {
     @Value("${app.rabbitmq.queues.eventDeleted}")
     private String eventDeletedQueueName;
 
+    @Value("${app.rabbitmq.exchanges.payment}")
+    private String paymentExchangeName;
+
+    @Value("${app.rabbitmq.routing.paymentSucceeded}")
+    private String paymentSucceededRoutingKey;
+
+    @Value("${app.rabbitmq.routing.paymentFailed}")
+    private String paymentFailedRoutingKey;
+
+    @Value("${app.rabbitmq.queues.paymentSucceeded}")
+    private String paymentSucceededQueueName;
+
+    @Value("${app.rabbitmq.queues.paymentFailed}")
+    private String paymentFailedQueueName;
+
     @Value("${app.rabbitmq.exchanges.dead-letter}")
     private String deadLetterExchangeName;
 
@@ -161,6 +176,41 @@ public class RabbitConfig {
         return BindingBuilder.bind(eventDeletedQueue())
                 .to(eventExchange())
                 .with(eventDeletedRoutingKey);
+    }
+
+    @Bean
+    DirectExchange paymentExchange() {
+        return new DirectExchange(paymentExchangeName);
+    }
+
+    @Bean
+    Queue paymentSucceededQueue() {
+        return QueueBuilder.durable(paymentSucceededQueueName)
+                .withArgument("x-dead-letter-exchange", deadLetterExchangeName)
+                .withArgument("x-dead-letter-routing-key", deadLetterRoutingKey)
+                .build();
+    }
+
+    @Bean
+    Binding paymentSucceededBinding() {
+        return BindingBuilder.bind(paymentSucceededQueue())
+                .to(paymentExchange())
+                .with(paymentSucceededRoutingKey);
+    }
+
+    @Bean
+    Queue paymentFailedQueue() {
+        return QueueBuilder.durable(paymentFailedQueueName)
+                .withArgument("x-dead-letter-exchange", deadLetterExchangeName)
+                .withArgument("x-dead-letter-routing-key", deadLetterRoutingKey)
+                .build();
+    }
+
+    @Bean
+    Binding paymentFailedBinding() {
+        return BindingBuilder.bind(paymentFailedQueue())
+                .to(paymentExchange())
+                .with(paymentFailedRoutingKey);
     }
 
     // Final DLQ
