@@ -49,6 +49,7 @@ requirements.txt
 
 .venv
 
+*.toml
 mise.toml
 
 test*.yml

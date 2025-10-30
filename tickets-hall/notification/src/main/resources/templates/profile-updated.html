@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile Updated Successfully</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .update-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            max-width: 600px;
+            width: 100%;
+            position: relative;
+        }
+        
+        .update-header {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .update-header::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+        }
+        
+        .success-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        
+        .update-title {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .update-subtitle {
+            font-size: 16px;
+            font-weight: 300;
+            opacity: 0.9;
+        }
+        
+        .update-body {
+            padding: 40px 30px 30px;
+            text-align: center;
+        }
+        
+        .greeting-section {
+            margin-bottom: 30px;
+        }
+        
+        .greeting-text {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .user-name {
+            font-size: 24px;
+            font-weight: 600;
+            color: #28a745;
+            margin-bottom: 20px;
+        }
+        
+        .update-message {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #6c757d;
+            margin-bottom: 30px;
+        }
+        
+        .profile-summary {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 30px 0;
+            border: 2px solid #e9ecef;
+        }
+        
+        .summary-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .summary-icon {
+            font-size: 20px;
+            margin-right: 10px;
+        }
+        
+        .profile-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .profile-item:last-child {
+            margin-bottom: 0;
+            border-bottom: none;
+        }
+        
+        .profile-label {
+            font-size: 14px;
+            color: #6c757d;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .profile-value {
+            font-size: 16px;
+            color: #333;
+            font-weight: 500;
+            text-align: right;
+            max-width: 60%;
+            word-break: break-word;
+        }
+        
+        .security-notice {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        
+        .security-icon {
+            color: #856404;
+            font-size: 18px;
+            margin-right: 8px;
+        }
+        
+        .security-text {
+            font-size: 14px;
+            color: #856404;
+            line-height: 1.4;
+        }
+        
+        .cta-section {
+            margin: 30px 0;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            text-decoration: none;
+            padding: 12px 25px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: transform 0.2s ease;
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-2px);
+        }
+        
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px dashed #dee2e6;
+            text-align: center;
+        }
+        
+        .footer-text {
+            font-size: 12px;
+            color: #6c757d;
+            line-height: 1.4;
+        }
+        
+        .contact-info {
+            margin-top: 15px;
+        }
+        
+        .contact-link {
+            color: #28a745;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            
+            .update-header {
+                padding: 30px 20px;
+            }
+            
+            .update-title {
+                font-size: 24px;
+            }
+            
+            .update-subtitle {
+                font-size: 14px;
+            }
+            
+            .update-body {
+                padding: 30px 20px 20px;
+            }
+            
+            .user-name {
+                font-size: 20px;
+            }
+            
+            .profile-summary {
+                padding: 20px;
+            }
+            
+            .profile-item {
+                flex-direction: column;
+                align-items: flex-start;
+                text-align: left;
+            }
+            
+            .profile-value {
+                text-align: left;
+                max-width: 100%;
+                margin-top: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="update-container">
+        <div class="update-header">
+            <div class="success-icon">✅</div>
+            <div class="update-title">Profile Updated Successfully</div>
+            <div class="update-subtitle">Your changes have been saved</div>
+        </div>
+        
+        <div class="update-body">
+            <div class="greeting-section">
+                <div class="greeting-text">Hi there,</div>
+                <div class="user-name" th:text="${name}">Guest</div>
+                <div class="update-message">
+                    Great news! Your profile information has been successfully updated. 
+                    Here's a summary of your current profile details.
+                </div>
+            </div>
+            
+            <div class="profile-summary">
+                <div class="summary-title">
+                    <span class="summary-icon">👤</span>
+                    Your Updated Profile
+                </div>
+                
+                <div class="profile-item">
+                    <div class="profile-label">First Name</div>
+                    <div class="profile-value" th:text="${firstName}">John</div>
+                </div>
+                
+                <div class="profile-item">
+                    <div class="profile-label">Last Name</div>
+                    <div class="profile-value" th:text="${lastName}">Doe</div>
+                </div>
+                
+                <div class="profile-item">
+                    <div class="profile-label">Email Address</div>
+                    <div class="profile-value" th:text="${email}">john.doe@example.com</div>
+                </div>
+            </div>
+            
+            <div class="security-notice">
+                <div style="display: flex; align-items: flex-start;">
+                    <span class="security-icon">🔒</span>
+                    <div class="security-text">
+                        <strong>Security Notice:</strong> If you didn't make these changes, 
+                        please contact our support team immediately to secure your account.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer">
+                <div class="footer-text">
+                    This email was sent to confirm your profile update on TicketsHall.<br>
+                    If you have any questions or concerns, we're here to help!
+                </div>
+                
+                <div class="contact-info">
+                    <div class="footer-text">
+                        Need assistance? Contact us at 
+                        <a href="mailto:support@ticketshall.com" class="contact-link">support@ticketshall.com</a>
+                    </div>
+                </div>
+                
+                <div class="footer-text" style="margin-top: 15px;">
+                    © 2025 TicketsHall. All rights reserved.
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

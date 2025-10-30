@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to TicketsHall</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .welcome-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            max-width: 600px;
+            width: 100%;
+            position: relative;
+        }
+        
+        .welcome-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .welcome-header::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+        }
+        
+        .welcome-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        
+        .welcome-title {
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .welcome-subtitle {
+            font-size: 18px;
+            font-weight: 300;
+            opacity: 0.9;
+        }
+        
+        .welcome-body {
+            padding: 40px 30px 30px;
+            text-align: center;
+        }
+        
+        .greeting-section {
+            margin-bottom: 30px;
+        }
+        
+        .greeting-text {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .user-name {
+            font-size: 28px;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+        
+        .welcome-message {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #6c757d;
+            margin-bottom: 30px;
+        }
+        
+        .features-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 30px 0;
+        }
+        
+        .features-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        .feature-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        
+        .feature-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .feature-icon {
+            font-size: 20px;
+            margin-right: 15px;
+            width: 24px;
+            flex-shrink: 0;
+        }
+        
+        .feature-text {
+            font-size: 16px;
+            color: #495057;
+        }
+        
+        .cta-section {
+            margin: 30px 0;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            transition: transform 0.2s ease;
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-2px);
+        }
+        
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px dashed #dee2e6;
+            text-align: center;
+        }
+        
+        .footer-text {
+            font-size: 12px;
+            color: #6c757d;
+            line-height: 1.4;
+        }
+        
+        .social-links {
+            margin-top: 15px;
+        }
+        
+        .social-link {
+            display: inline-block;
+            margin: 0 10px;
+            font-size: 18px;
+            color: #6c757d;
+            text-decoration: none;
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            
+            .welcome-header {
+                padding: 30px 20px;
+            }
+            
+            .welcome-title {
+                font-size: 28px;
+            }
+            
+            .welcome-subtitle {
+                font-size: 16px;
+            }
+            
+            .welcome-body {
+                padding: 30px 20px 20px;
+            }
+            
+            .user-name {
+                font-size: 24px;
+            }
+            
+            .features-section {
+                padding: 20px;
+            }
+            
+            .feature-item {
+                flex-direction: column;
+                align-items: flex-start;
+                text-align: center;
+            }
+            
+            .feature-icon {
+                margin-right: 0;
+                margin-bottom: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="welcome-container">
+        <div class="welcome-header">
+            <div class="welcome-icon">🎫</div>
+            <div class="welcome-title">Welcome to TicketsHall</div>
+            <div class="welcome-subtitle">Your gateway to amazing events</div>
+        </div>
+        
+        <div class="welcome-body">
+            <div class="greeting-section">
+                <div class="greeting-text">Hello</div>
+                <div class="user-name" th:text="${name}">Guest</div>
+                <div class="welcome-message">
+                    We're thrilled to have you join the TicketsHall community! 
+                    You now have access to discover, book, and enjoy incredible events 
+                    happening around you.
+                </div>
+            </div>
+            
+            <div class="features-section">
+                <div class="features-title">What you can do now:</div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">🔍</div>
+                    <div class="feature-text">Discover amazing events in your area</div>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">🎟️</div>
+                    <div class="feature-text">Book tickets instantly with secure payment</div>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">📱</div>
+                    <div class="feature-text">Get digital tickets with QR codes</div>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">🔔</div>
+                    <div class="feature-text">Receive notifications about your events</div>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">⭐</div>
+                    <div class="feature-text">Rate and review events you attend</div>
+                </div>
+            </div>
+            
+            <div class="footer">
+                <div class="footer-text">
+                    Need help getting started? Contact our support team anytime.<br>
+                    We're here to make your event experience amazing!
+                </div>
+                
+                <div class="social-links">
+                    <a href="#" class="social-link">📧</a>
+                    <a href="#" class="social-link">📱</a>
+                    <a href="#" class="social-link">🌐</a>
+                </div>
+                
+                <div class="footer-text" style="margin-top: 15px;">
+                    © 2025 TicketsHall. All rights reserved.<br>
+                    For support, contact us at support@ticketshall.com
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,4 +1,104 @@
+version: "3.9"
+
 services:
+
+  attendance-db:
+    image: postgres:17.6
+    container_name: attendance_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: attendance
+    ports:
+      - "5433:5432"
+    volumes:
+      - attendance-data:/var/lib/postgresql/data
+    networks:
+      - tickets-hall-network
+
+  customers-db:
+    image: postgres:17.6
+    container_name: customers_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: customers
+    ports:
+      - "5434:5432"
+    volumes:
+      - customers-data:/var/lib/postgresql/data
+    networks:
+      - tickets-hall-network
+
+  events-db:
+    image: postgres:17.6
+    container_name: events_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: events
+    ports:
+      - "5435:5432"
+    volumes:
+      - events-data:/var/lib/postgresql/data
+    networks:
+      - tickets-hall-network
+
+  notification-db:
+    image: postgres:17.6
+    container_name: notification_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: notification
+    ports:
+      - "5436:5432"
+    volumes:
+      - notification-data:/var/lib/postgresql/data
+    networks:
+      - tickets-hall-network
+
+  payments-db:
+    image: postgres:17.6
+    container_name: payments_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: payments
+    ports:
+      - "5437:5432"
+    volumes:
+      - payments-data:/var/lib/postgresql/data
+    networks:
+      - tickets-hall-network
+
+  tickets-db:
+    image: postgres:17.6
+    container_name: tickets_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: tickets
+    ports:
+      - "5438:5432"
+    volumes:
+      - tickets-data:/var/lib/postgresql/data
+    networks:
+      - tickets-hall-network
+
+  venues-db:
+    image: postgres:17.6
+    container_name: venues_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: venues
+    ports:
+      - "5439:5432"
+    volumes:
+      - venues-data:/var/lib/postgresql/data
+    networks:
+      - tickets-hall-network
 
   attendance:
     build:
@@ -16,7 +116,7 @@ services:
       - SPRING_RABBITMQ_USERNAME=admin
       - SPRING_RABBITMQ_PASSWORD=admin
     depends_on:
-      - postgres
+      - attendance-db
       - redis
       - rabbitmq
     networks:
@@ -39,7 +139,7 @@ services:
       - SPRING_RABBITMQ_USERNAME=admin
       - SPRING_RABBITMQ_PASSWORD=admin
     depends_on:
-      - postgres
+      - customers-db
       - redis
       - rabbitmq
     networks:
@@ -62,7 +162,7 @@ services:
       - SPRING_RABBITMQ_USERNAME=admin
       - SPRING_RABBITMQ_PASSWORD=admin
     depends_on:
-      - postgres
+      - events-db
       - redis
       - rabbitmq
     networks:
@@ -87,7 +187,7 @@ services:
       - SPRING_MAIL_HOST=mailpit
       - SPRING_MAIL_PORT=1025
     depends_on:
-      - postgres
+      - notification-db
       - redis
       - rabbitmq
     networks:
@@ -110,7 +210,7 @@ services:
       - SPRING_RABBITMQ_USERNAME=admin
       - SPRING_RABBITMQ_PASSWORD=admin
     depends_on:
-      - postgres
+      - payments-db
       - redis
       - rabbitmq
     networks:
@@ -133,7 +233,7 @@ services:
       - SPRING_RABBITMQ_USERNAME=admin
       - SPRING_RABBITMQ_PASSWORD=admin
     depends_on:
-      - postgres
+      - tickets-db
       - redis
       - rabbitmq
     networks:
@@ -156,25 +256,12 @@ services:
       - SPRING_RABBITMQ_USERNAME=admin
       - SPRING_RABBITMQ_PASSWORD=admin
     depends_on:
-      - postgres
+      - venues-db
       - redis
       - rabbitmq
     networks:
       - tickets-hall-network
     restart: unless-stopped
-
-  postgres:
-    container_name: tickets-hall_postgres
-    image: postgres:17.6
-    ports:
-      - "5432:5432"
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-    volumes:
-      - ./postgres_data:/var/lib/postgresql/data
-    networks:
-      - tickets-hall-network
 
   redis:
     container_name: tickets-hall_redis
@@ -187,37 +274,11 @@ services:
     networks:
       - tickets-hall-network
 
-  mailpit:
-    container_name: tickets-hall_mailpit
-    image: axllent/mailpit:latest
-    ports:
-      - "25:1025"
-      - "8080:8025" 
-    networks:
-      - tickets-hall-network
-    restart: unless-stopped
-
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: tickets-hall_pgadmin
-    environment:
-      - PGADMIN_DEFAULT_EMAIL=admin@admin.com
-      - PGADMIN_DEFAULT_PASSWORD=admin
-    ports:
-      - "5050:80"
-    volumes:
-      - ./pgadmin_data:/var/lib/pgadmin
-    depends_on:
-      - postgres
-    networks:
-      - tickets-hall-network
-    restart: unless-stopped
-
   rabbitmq:
     image: rabbitmq:3-management-alpine
     container_name: tickets-hall_rabbitmq
     ports:
-      - "5672:5672" 
+      - "5672:5672"
       - "15672:15672"
     environment:
       - RABBITMQ_DEFAULT_USER=admin
@@ -228,12 +289,16 @@ services:
       - tickets-hall-network
     restart: unless-stopped
 
-
 volumes:
-  postgres_data:
+  attendance-data:
+  customers-data:
+  events-data:
+  notification-data:
+  payments-data:
+  tickets-data:
+  venues-data:
   redis_data:
   rabbitmq_data:
-  pgadmin_data:
 
 networks:
   tickets-hall-network:
