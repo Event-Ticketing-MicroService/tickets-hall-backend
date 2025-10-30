@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class EventServiceImpl implements EventService {
@@ -30,7 +31,15 @@ public class EventServiceImpl implements EventService {
         Optional<Category> category = categoryRepository.findById(createEventParams.getCategoryId());
         if(category.isEmpty()) throw new NotFoundException("No category found with the given id");
         Event event = eventMapper.toEvent(createEventParams);
+        event.setCategory(category.get());
         //TODO: push an EVENT_CREATED message to RabbitMQ
         return eventRepository.save(event);
+    }
+
+    @Override
+    public Event getEvent(UUID id) {
+        Optional<Event> event = eventRepository.findByIdWithCategory(id);
+        if(event.isEmpty()) throw new NotFoundException("Event with given id is not found");
+        return event.get();
     }
 }
