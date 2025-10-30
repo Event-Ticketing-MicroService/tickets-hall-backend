@@ -2,6 +2,8 @@ package com.ticketshall.events.services.impl;
 
 import com.ticketshall.events.dtos.params.CreateEventParams;
 import com.ticketshall.events.dtos.filterparams.EventFilterParams;
+import com.ticketshall.events.dtos.params.PublishEventParams;
+import com.ticketshall.events.exceptions.ConflictErrorException;
 import com.ticketshall.events.exceptions.NotFoundException;
 import com.ticketshall.events.mappers.EventMapper;
 import com.ticketshall.events.models.Category;
@@ -16,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -52,5 +55,19 @@ public class EventServiceImpl implements EventService {
     public Page<Event> getAllEvents(EventFilterParams eventFilterParams, Pageable pageable) {
         Specification<Event> spec = EventSpecification.applyFilter(eventFilterParams);
         return eventRepository.findAll(spec, pageable);
+    }
+
+    @Override
+    public void publishEvent(UUID eventId, PublishEventParams publishEventParams) {
+        Optional<Event> eventOptional = eventRepository.findById(eventId);
+        if(eventOptional.isEmpty()) throw new NotFoundException("Event with given id is not found");
+        Event event = eventOptional.get();
+
+        LocalDateTime now = LocalDateTime.now();
+        if(now.isAfter(event.getEndsAt())) throw new ConflictErrorException("Event has already ended");
+
+        if(publishEventParams.getIsPublished() && !event.getIsPublished()) event.setPublishedAt(now);
+        event.setIsPublished(publishEventParams.getIsPublished());
+        eventRepository.save(event);
     }
 }
