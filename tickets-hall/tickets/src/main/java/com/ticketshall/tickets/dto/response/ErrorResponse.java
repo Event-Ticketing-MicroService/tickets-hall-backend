@@ -1,4 +1,4 @@
-package com.ticketshall.tickets.dto;
+package com.ticketshall.tickets.dto.response;
 import java.time.LocalDateTime;
 
 public record ErrorResponse(

@@ -1,150 +1,238 @@
 package com.ticketshall.tickets.service.impl;
 
-import com.ticketshall.tickets.dto.ReservationRequest;
+import com.ticketshall.tickets.dto.CreatePaymentRequest;
+import com.ticketshall.tickets.dto.CreatePaymentResponse;
+import com.ticketshall.tickets.dto.request.ReservationRequest;
 import com.ticketshall.tickets.exceptions.TicketTypeLockTimeoutException;
 import com.ticketshall.tickets.exceptions.TicketTypeNotFoundException;
 import com.ticketshall.tickets.exceptions.TicketTypeStockNotEnoughException;
+import com.ticketshall.tickets.feign.PaymentServiceClient;
 import com.ticketshall.tickets.models.TicketType;
 import com.ticketshall.tickets.models.nonStoredModels.Reservation;
 import com.ticketshall.tickets.models.nonStoredModels.ReservationItem;
-import com.ticketshall.tickets.repository.EventRepository;
-import com.ticketshall.tickets.repository.TicketRepository;
+import com.ticketshall.tickets.models.nonStoredModels.constants.GeneralConstants;
 import com.ticketshall.tickets.repository.TicketTypeRepository;
 import com.ticketshall.tickets.service.ReservationService;
 import lombok.RequiredArgsConstructor;
+import org.redisson.api.RBucket;
+import org.redisson.api.RList;
 import org.redisson.api.RLock;
+import org.redisson.api.RMap;
 import org.redisson.api.RedissonClient;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
 public class ReservationServiceImpl implements ReservationService {
-    private final RedisTemplate<String, Object> redisTemplate;
-    private final TicketRepository ticketRepository;
-    private final TicketTypeRepository  ticketTypeRepository;
-    private final EventRepository eventRepository;
+    private final TicketTypeRepository ticketTypeRepository;
     private final RedissonClient redissonClient;
+    private final PaymentServiceClient paymentServiceClient;
     private static final Duration EXPIRATION_TIME = Duration.ofMinutes(10);
     private static final Duration TTL = Duration.ofMinutes(12);
-    private static final String RESERVATION_PREFIX = "reservation:";
-    private static final String TICKET_TYPE_INFIX = ":ticketType:";
-    private static final String EVENT_PREFIX = "event:";
+
     @Override
-    public Reservation reserve(ReservationRequest reservationRequest) {
-        String reservationId = UUID.randomUUID().toString();
+    public CreatePaymentResponse reserve(ReservationRequest request) {
         List<ReservationItem> reservationItems = new ArrayList<>();
-        float totalPrice = (float) 0;
-        for(var requestItem: reservationRequest.items()){
-            String ticketTypeKey = // event:id:TicketType:id
-                    String.format("%s%s%s%s",
-                            EVENT_PREFIX,
-                            reservationRequest.eventId(),
-                            TICKET_TYPE_INFIX,
-                            requestItem.ticketTypeId().toString());
+        float totalPrice = 0;
+
+        for (var reqItem : request.items()) {
+            String ticketTypeKey = buildTicketTypeKey(request.eventId(), reqItem.ticketTypeId());
             RLock lock = redissonClient.getLock("lock:" + ticketTypeKey);
-            try{
-                if(!lock.tryLock(5,10, TimeUnit.SECONDS)){
-                    throw new TicketTypeLockTimeoutException
-                            ("Could not lock TicketType " + requestItem.ticketTypeId());
-                }
-                Map<Object, Object> ticketData = redisTemplate.opsForHash().entries(ticketTypeKey);
-                if (ticketData.isEmpty()) {
-                    TicketType type = ticketTypeRepository
-                            .findById(requestItem.ticketTypeId())
-                            .orElseThrow(() -> new TicketTypeNotFoundException
-                                    ("TicketType not found: " + requestItem.ticketTypeId()));
 
-                    ticketData = Map.of(
-                            "id", String.valueOf(type.getId()),
-                            "eventId", String.valueOf(type.getEventId()),
-                            "name", type.getName(),
-                            "price", type.getPrice().toString(),
-                            "totalStock", String.valueOf(type.getTotalStock()),
-                            "availableStock", String.valueOf(type.getAvailableStock())
-                    );
+            try {
+                // acquire lock
+                if (!lock.tryLock(5, 10, TimeUnit.SECONDS)) {
+                    throw new TicketTypeLockTimeoutException("Could not lock TicketType " + reqItem.ticketTypeId());
+                }
+                TicketType ticketType = getOrLoadTicketType(ticketTypeKey,
+                        reqItem.ticketTypeId(),
+                        request.eventId());
+                if (ticketType.getAvailableStock() < reqItem.quantity()) {
+                    throw new TicketTypeStockNotEnoughException("Not enough stock for " + ticketType.getName());
+                }
 
-                    redisTemplate.opsForHash().putAll(ticketTypeKey, ticketData);
-                }
-                String name = (String) ticketData.get("name");
-                float price = Float.parseFloat((String)ticketData.get("price"));
-                int available = Integer.parseInt((String) ticketData.get("availableStock"));
-                if(available < requestItem.quantity()){
-                    throw new TicketTypeStockNotEnoughException("Not enough stock for TicketType " + requestItem.ticketTypeId());
-                }
-                redisTemplate
-                        .opsForHash()
-                        .put(ticketTypeKey, "availableStock", available - requestItem.quantity());
-                reservationItems.add(new ReservationItem(requestItem.ticketTypeId(), name, requestItem.quantity(), price));
-                totalPrice += requestItem.quantity() * price;
-            }
-            catch (InterruptedException e) {
+                ticketType.setAvailableStock(ticketType.getAvailableStock() - reqItem.quantity());
+                updateTicketTypeCache(request.eventId(), ticketType);
+
+                ReservationItem item = new ReservationItem(
+                        ticketType.getId(),
+                        ticketType.getName(),
+                        reqItem.quantity(),
+                        ticketType.getPrice()
+                );
+
+                reservationItems.add(item);
+                totalPrice += item.getQuantity() * item.getUnitPrice();
+
+            } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                throw new RuntimeException("Lock interrupted for ticket type: " + requestItem.ticketTypeId(), e);
-            }
-            finally {
-                lock.unlock();
+                throw new RuntimeException("Lock interrupted for ticket type: " + reqItem.ticketTypeId(), e);
+            } finally {
+                if (lock.isHeldByCurrentThread()) {
+                    lock.unlock();
+                }
             }
         }
+
+        Reservation reservation = createAndStoreReservation(request, reservationItems, totalPrice);
+
+        CreatePaymentRequest paymentRequest = new CreatePaymentRequest(totalPrice, GeneralConstants.DEFAULT_CURRENCY, request.attendeeId().toString(), request.eventId().toString(), reservation.getId().toString());
+        return paymentServiceClient.createIntent(paymentRequest).getBody();
+    }
+
+    private String buildTicketTypeKey(UUID eventId, UUID ticketTypeId) {
+        return String.format("%s%s%s%s",
+                GeneralConstants.REDIS_EVENT_PREFIX,
+                eventId,
+                GeneralConstants.REDIS_TICKET_TYPE_INFIX,
+                ticketTypeId);
+    }
+    private String getEventTicketTypesKey(UUID eventId) {
+        return GeneralConstants.REDIS_EVENT_PREFIX + eventId + GeneralConstants.REDIS_TICKET_TYPE_INFIX;
+    }
+    private TicketType getOrLoadTicketType(String key, UUID ticketTypeId, UUID eventId) {
+        RMap<String, String> hashMap = redissonClient.getMap(key);
+
+        String cacheKey = getEventTicketTypesKey(eventId);
+        RList<TicketType> cachedList = redissonClient.getList(cacheKey);
+        // builds the cacheList if not exist or empty
+        if (!cachedList.isExists() && cachedList.isEmpty()) {
+            List<TicketType> ticketTypes = ticketTypeRepository.getTicketTypesByEventId(eventId);
+            if(!ticketTypes.isEmpty()) {
+                cachedList.addAll(ticketTypes);
+            }
+        }
+
+        if (hashMap.isEmpty()) {
+            TicketType type = ticketTypeRepository.findById(ticketTypeId)
+                    .orElseThrow(() -> new TicketTypeNotFoundException("TicketType not found: " + ticketTypeId));
+
+            cacheTicketTypeHash(key, type);
+            return type;
+        } else {
+            return mapToTicketType(hashMap);
+        }
+    }
+
+    private void cacheTicketTypeHash(String key, TicketType type) {
+        RMap<String, String> hashMap = redissonClient.getMap(key);
+        Map<String, String> map = new HashMap<>();
+        map.put("id", type.getId().toString());
+        map.put("eventId", type.getEventId().toString());
+        map.put("description", type.getDescription());
+        map.put("name", type.getName());
+        map.put("price", type.getPrice().toString());
+        map.put("totalStock", String.valueOf(type.getTotalStock()));
+        map.put("availableStock", String.valueOf(type.getAvailableStock()));
+        map.put("reservationsStartsAtUtc", type.getReservationsStartsAtUtc().toString());
+        map.put("reservationsEndsAtUtc", type.getReservationsEndsAtUtc().toString());
+        map.put("createdAtUtc", type.getCreatedAtUtc().toString());
+        map.put("updatedAtUtc", type.getUpdatedAtUtc().toString());
+        hashMap.putAll(map);
+    }
+
+    private TicketType mapToTicketType(RMap<String, String> data) {
+        TicketType type = new TicketType();
+        type.setId(UUID.fromString(data.get("id")));
+        type.setEventId(UUID.fromString(data.get("eventId")));
+        type.setName(data.get("name"));
+        type.setPrice(Float.parseFloat(data.get("price")));
+        type.setTotalStock(Integer.parseInt(data.get("totalStock")));
+        type.setAvailableStock(Integer.parseInt(data.get("availableStock")));
+        type.setDescription(data.get("description"));
+        type.setReservationsStartsAtUtc(LocalDateTime.parse(data.get("reservationsStartsAtUtc")));
+        type.setReservationsEndsAtUtc(LocalDateTime.parse(data.get("reservationsEndsAtUtc")));
+        type.setCreatedAtUtc(LocalDateTime.parse(data.get("createdAtUtc")));
+        type.setUpdatedAtUtc(LocalDateTime.parse(data.get("updatedAtUtc")));
+        return type;
+    }
+
+    private void updateTicketTypeCache(UUID eventId, TicketType updated) {
+        // Update hash
+        String hashKey = buildTicketTypeKey(eventId, updated.getId());
+        cacheTicketTypeHash(hashKey, updated);
+
+        // Update list (consistent with TicketTypeServiceImpl)
+        String listKey = GeneralConstants.REDIS_EVENT_PREFIX + eventId + GeneralConstants.REDIS_TICKET_TYPE_INFIX;
+        RList<TicketType> cachedList = redissonClient.getList(listKey);
+
+        if (cachedList.isExists() && !cachedList.isEmpty()) {
+            List<TicketType> allTypes = cachedList.readAll();
+            for (int i = 0; i < allTypes.size(); i++) {
+                if (allTypes.get(i).getId().equals(updated.getId())) {
+                    cachedList.set(i, updated);
+                    break;
+                }
+            }
+        }
+    }
+
+    private Reservation createAndStoreReservation(ReservationRequest request, List<ReservationItem> items, float totalPrice) {
+        UUID reservationId = UUID.randomUUID();
+
+        CreatePaymentRequest paymentRequest = new CreatePaymentRequest(totalPrice, GeneralConstants.DEFAULT_CURRENCY, request.attendeeId().toString(), request.eventId().toString(), reservationId.toString());
+        CreatePaymentResponse response = paymentServiceClient.createIntent(paymentRequest).getBody();
+
+        if (response == null) {
+            throw new RuntimeException("Failed to create reservation");
+        }
+
         Reservation reservation = new Reservation(
-                UUID.fromString(reservationId),
-                reservationRequest.attendeeId(),
-                reservationRequest.eventId(),
-                reservationItems,
+                reservationId,
+                request.attendeeId(),
+                request.eventId(),
+                response.id(),
+                items,
                 totalPrice,
                 LocalDateTime.now().plus(EXPIRATION_TIME)
         );
-        String reservationKey = String.format("%s%s", RESERVATION_PREFIX, reservationId);
-        redisTemplate.opsForValue().set(reservationKey, reservationRequest, TTL);
+
+        String reservationKey = String.format("%s%s", GeneralConstants.REDIS_RESERVATION_PREFIX, reservationId);
+        RBucket<Reservation> bucket = redissonClient.getBucket(reservationKey);
+        bucket.set(reservation, TTL);
+
         return reservation;
     }
 
-    public void expireReservation(String reservationId) {
-        String redisKey = String.format("%s%s", RESERVATION_PREFIX, reservationId);
+    public void expireReservation(UUID reservationId, boolean recoverStock) {
+        String redisKey = String.format("%s%s", GeneralConstants.REDIS_RESERVATION_PREFIX, reservationId);
+        RBucket<Reservation> bucket = redissonClient.getBucket(redisKey);
+        Reservation reservation = bucket.get();
 
-        Reservation reservation = (Reservation) redisTemplate.opsForValue().get(redisKey);
-        if (reservation == null) {
+        if (reservation == null) return;
+
+        if (!recoverStock) {
+            bucket.delete();
             return;
         }
-
         for (ReservationItem item : reservation.getItems()) {
-            String ticketTypeKey = String.format("%s%s%s%s",
-                    EVENT_PREFIX,
-                    reservation.getEventId(),
-                    TICKET_TYPE_INFIX,
-                    item.getTicketTypeId());
-            String lockKey = "lock:" + ticketTypeKey;
-            RLock lock = redissonClient.getLock(lockKey);
+            String ticketTypeKey = buildTicketTypeKey(reservation.getEventId(), item.getTicketTypeId());
 
+            RLock lock = redissonClient.getLock("lock:" + ticketTypeKey);
             try {
-                if (!lock.tryLock(5, 10, TimeUnit.SECONDS)) {
-                    continue;
-                }
+                if (!lock.tryLock(5, 10, TimeUnit.SECONDS)) continue;
 
-                Map<Object, Object> ticketData = redisTemplate.opsForHash().entries(ticketTypeKey);
-                if (ticketData.isEmpty()) {
-                    continue;
-                }
+                TicketType ticketType = getOrLoadTicketType(ticketTypeKey,
+                        item.getTicketTypeId(),
+                        reservation.getEventId());
+                ticketType.setAvailableStock(ticketType.getAvailableStock() + item.getQuantity());
+                updateTicketTypeCache(reservation.getEventId(), ticketType);
 
-                int available = Integer.parseInt((String) ticketData.get("availableStock"));
-                int newAvailable = available + item.getQuantity();
-                redisTemplate.opsForHash().put(ticketTypeKey, "availableStock", newAvailable);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 throw new RuntimeException("Lock interrupted for ticket type: " + item.getTicketTypeId(), e);
             } finally {
-                lock.unlock();
+                if (lock.isHeldByCurrentThread()) {
+                    lock.unlock();
+                }
             }
         }
 
-        redisTemplate.delete(redisKey);
+        bucket.delete();
     }
 }

@@ -5,7 +5,7 @@ FROM maven:3.9-eclipse-temurin-17 AS build
 # Set working directory
 WORKDIR /app
 
-# Copy parent pom.xml first for better caching
+# Copy parent pom.xml
 COPY pom.xml ./pom.xml
 
 # Copy tickets module pom.xml

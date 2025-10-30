@@ -1,6 +1,6 @@
 package com.ticketshall.tickets.exceptions.handlers;
 
-import com.ticketshall.tickets.dto.ErrorResponse;
+import com.ticketshall.tickets.dto.response.ErrorResponse;
 import com.ticketshall.tickets.exceptions.TicketTypeNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
