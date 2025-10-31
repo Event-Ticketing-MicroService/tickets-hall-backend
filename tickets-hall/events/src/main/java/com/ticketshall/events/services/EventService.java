@@ -14,5 +14,5 @@ public interface EventService {
     Event getEvent(UUID id);
     Page<Event> getAllEvents(EventFilterParams eventFilterParams, Pageable pageable);
     void publishEvent(UUID eventId, PublishEventParams publishEventParams);
-    public Event updateEvent(UUID id, UpsertEventParams upsertEventParams);
+    public void updateEvent(UUID id, UpsertEventParams upsertEventParams);
 }
