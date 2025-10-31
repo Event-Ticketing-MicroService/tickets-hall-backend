@@ -45,10 +45,12 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public Event updateEvent(UUID id, UpsertEventParams eventUpdateParams) {
+    public void updateEvent(UUID id, UpsertEventParams eventUpdateParams) {
         Optional<Event> eventOptional = eventRepository.findById(id);
         if(eventOptional.isEmpty()) throw new NotFoundException("Event with given id is not found");
-        return new Event();
+        Event updatedEvent = eventOptional.get();
+        eventMapper.updateEventFromUpsertParams(eventUpdateParams, updatedEvent);
+        eventRepository.save(updatedEvent);
     }
 
     @Override

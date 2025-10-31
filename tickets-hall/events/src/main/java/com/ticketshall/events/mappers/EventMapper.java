@@ -5,6 +5,7 @@ import com.ticketshall.events.dtos.responses.EventDTO;
 import com.ticketshall.events.models.Event;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 
 @Mapper(componentModel = "spring", uses = {CategoryMapper.class})
 public interface EventMapper {
@@ -12,4 +13,12 @@ public interface EventMapper {
     Event toEvent(UpsertEventParams UpsertEventParams);
 
     EventDTO toEventDTO(Event event);
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "category", ignore = true)
+    @Mapping(target = "isPublished", ignore = true)
+    @Mapping(target = "publishedAt", ignore = true)
+    void updateEventFromUpsertParams(UpsertEventParams upsertEventParams, @MappingTarget Event event);
 }

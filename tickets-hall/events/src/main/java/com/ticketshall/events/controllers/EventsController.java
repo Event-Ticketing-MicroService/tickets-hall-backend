@@ -9,6 +9,7 @@ import com.ticketshall.events.mappers.EventMapper;
 import com.ticketshall.events.models.Event;
 import com.ticketshall.events.services.EventService;
 import com.ticketshall.events.validations.EventValidator;
+import jakarta.servlet.ServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -66,7 +67,7 @@ public class EventsController {
     }
 
     // TODO: publish event
-    @PutMapping("/{id}/publish")
+    @PatchMapping("/{id}/publish")
     ResponseEntity<?> publishEvent(
             @PathVariable UUID id,
             @RequestBody PublishEventParams publishEventParams
@@ -76,4 +77,10 @@ public class EventsController {
     }
 
     // TODO: update event
+
+    @PutMapping("/{id}")
+    ResponseEntity<?> updateEvent(@PathVariable UUID id, @RequestBody UpsertEventParams upsertEventParams, ServletRequest servletRequest) {
+        eventService.updateEvent(id, upsertEventParams);
+        return ResponseEntity.noContent().build();
+    }
 }
