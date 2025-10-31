@@ -1,18 +1,18 @@
 package com.ticketshall.events.validations;
 
-import com.ticketshall.events.dtos.params.CreateEventParams;
+import com.ticketshall.events.dtos.params.UpsertEventParams;
 import com.ticketshall.events.exceptions.BadRequestException;
 
 public class EventValidator implements Validator{
-    CreateEventParams createEventParams;
+    UpsertEventParams UpsertEventParams;
 
-    public EventValidator(CreateEventParams createEventParams) {
-        this.createEventParams = createEventParams;
+    public EventValidator(UpsertEventParams UpsertEventParams) {
+        this.UpsertEventParams = UpsertEventParams;
     }
 
     private boolean hasValidEndDate() {
-        return createEventParams.getEndsAt().isAfter(createEventParams.getStartsAt())
-                && !createEventParams.getEndsAt().equals(createEventParams.getStartsAt());
+        return UpsertEventParams.getEndsAt().isAfter(UpsertEventParams.getStartsAt())
+                && !UpsertEventParams.getEndsAt().equals(UpsertEventParams.getStartsAt());
     }
 
     @Override

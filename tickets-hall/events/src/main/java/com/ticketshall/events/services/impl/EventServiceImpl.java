@@ -1,6 +1,6 @@
 package com.ticketshall.events.services.impl;
 
-import com.ticketshall.events.dtos.params.CreateEventParams;
+import com.ticketshall.events.dtos.params.UpsertEventParams;
 import com.ticketshall.events.dtos.filterparams.EventFilterParams;
 import com.ticketshall.events.dtos.params.PublishEventParams;
 import com.ticketshall.events.exceptions.ConflictErrorException;
@@ -35,13 +35,20 @@ public class EventServiceImpl implements EventService {
         this.categoryRepository = categoryRepository;
     }
     @Override
-    public Event createEvent(CreateEventParams createEventParams) {
-        Optional<Category> category = categoryRepository.findById(createEventParams.getCategoryId());
+    public Event createEvent(UpsertEventParams UpsertEventParams) {
+        Optional<Category> category = categoryRepository.findById(UpsertEventParams.getCategoryId());
         if(category.isEmpty()) throw new NotFoundException("No category found with the given id");
-        Event event = eventMapper.toEvent(createEventParams);
+        Event event = eventMapper.toEvent(UpsertEventParams);
         event.setCategory(category.get());
         //TODO: push an EVENT_CREATED message to RabbitMQ
         return eventRepository.save(event);
+    }
+
+    @Override
+    public Event updateEvent(UUID id, UpsertEventParams eventUpdateParams) {
+        Optional<Event> eventOptional = eventRepository.findById(id);
+        if(eventOptional.isEmpty()) throw new NotFoundException("Event with given id is not found");
+        return new Event();
     }
 
     @Override
@@ -70,4 +77,6 @@ public class EventServiceImpl implements EventService {
         event.setIsPublished(publishEventParams.getIsPublished());
         eventRepository.save(event);
     }
+
+
 }
