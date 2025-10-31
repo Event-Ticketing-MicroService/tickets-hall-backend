@@ -1,6 +1,6 @@
 package com.ticketshall.events.controllers;
 
-import com.ticketshall.events.dtos.params.CreateEventParams;
+import com.ticketshall.events.dtos.params.UpsertEventParams;
 import com.ticketshall.events.dtos.params.PublishEventParams;
 import com.ticketshall.events.dtos.responses.EventDTO;
 import com.ticketshall.events.dtos.responses.ListResponse;
@@ -36,11 +36,11 @@ public class EventsController {
     }
 
     @PostMapping("")
-    ResponseEntity<?> createEvent(@Valid @RequestBody CreateEventParams createEventParams) {
-        EventValidator eventValidator = new EventValidator(createEventParams);
+    ResponseEntity<?> createEvent(@Valid @RequestBody UpsertEventParams UpsertEventParams) {
+        EventValidator eventValidator = new EventValidator(UpsertEventParams);
         eventValidator.validate();
 
-        Event event = eventService.createEvent(createEventParams);
+        Event event = eventService.createEvent(UpsertEventParams);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(eventMapper.toEventDTO(event));
     }
