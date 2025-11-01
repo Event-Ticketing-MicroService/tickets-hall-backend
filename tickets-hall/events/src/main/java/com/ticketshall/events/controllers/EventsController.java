@@ -1,6 +1,6 @@
 package com.ticketshall.events.controllers;
 
-import com.ticketshall.events.dtos.params.CreateEventParams;
+import com.ticketshall.events.dtos.params.UpsertEventParams;
 import com.ticketshall.events.dtos.params.PublishEventParams;
 import com.ticketshall.events.dtos.responses.EventDTO;
 import com.ticketshall.events.dtos.responses.ListResponse;
@@ -9,6 +9,7 @@ import com.ticketshall.events.mappers.EventMapper;
 import com.ticketshall.events.models.Event;
 import com.ticketshall.events.services.EventService;
 import com.ticketshall.events.validations.EventValidator;
+import jakarta.servlet.ServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -36,11 +37,11 @@ public class EventsController {
     }
 
     @PostMapping("")
-    ResponseEntity<?> createEvent(@Valid @RequestBody CreateEventParams createEventParams) {
-        EventValidator eventValidator = new EventValidator(createEventParams);
+    ResponseEntity<?> createEvent(@Valid @RequestBody UpsertEventParams UpsertEventParams) {
+        EventValidator eventValidator = new EventValidator(UpsertEventParams);
         eventValidator.validate();
 
-        Event event = eventService.createEvent(createEventParams);
+        Event event = eventService.createEvent(UpsertEventParams);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(eventMapper.toEventDTO(event));
     }
@@ -66,7 +67,7 @@ public class EventsController {
     }
 
     // TODO: publish event
-    @PutMapping("/{id}/publish")
+    @PatchMapping("/{id}/publish")
     ResponseEntity<?> publishEvent(
             @PathVariable UUID id,
             @RequestBody PublishEventParams publishEventParams
@@ -76,4 +77,10 @@ public class EventsController {
     }
 
     // TODO: update event
+
+    @PutMapping("/{id}")
+    ResponseEntity<?> updateEvent(@PathVariable UUID id, @RequestBody UpsertEventParams upsertEventParams, ServletRequest servletRequest) {
+        eventService.updateEvent(id, upsertEventParams);
+        return ResponseEntity.noContent().build();
+    }
 }

@@ -10,7 +10,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Setter
 @Getter
-public class CreateEventParams {
+public class UpsertEventParams {
     @NotNull(message = "category is required")
     private UUID categoryId;
 
