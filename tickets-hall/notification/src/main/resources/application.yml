@@ -62,15 +62,15 @@ app:
       ticketCreated: ticket.created
       ticketUpdated: ticket.updated
       ticketDeleted: ticket.deleted
-      dead-letter: dead.letter
+      dead-letter: notification.dead.letter
     queues:
-      userCreated: user.created.queue
-      userUpdated: user.updated.queue
-      userDeleted: user.deleted.queue
-      eventCreated: event.created.queue
-      eventUpdated: event.updated.queue
-      eventDeleted: event.deleted.queue
-      ticketCreated: ticket.created.queue
-      ticketUpdated: ticket.updated.queue
-      ticketDeleted: ticket.deleted.queue
-      dead-letter: final.dead.letter.queue
+      userCreated: notification.user.created.queue
+      userUpdated: notification.user.updated.queue
+      userDeleted: notification.user.deleted.queue
+      eventCreated: notification.event.created.queue
+      eventUpdated: notification.event.updated.queue
+      eventDeleted: notification.event.deleted.queue
+      ticketCreated: notification.ticket.created.queue
+      ticketUpdated: notification.ticket.updated.queue
+      ticketDeleted: notification.ticket.deleted.queue
+      dead-letter: notification.final.dead.letter.queue

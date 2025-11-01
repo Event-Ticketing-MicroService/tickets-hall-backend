@@ -61,15 +61,15 @@ app:
       ticketCreated: ticket.created
       ticketUpdated: ticket.updated
       ticketDeleted: ticket.deleted
-      dead-letter: dead.letter
+      dead-letter: attendance.dead.letter
     queues:
-      userCreated: user.created.queue
-      userUpdated: user.updated.queue
-      userDeleted: user.deleted.queue
-      eventCreated: event.created.queue
-      eventUpdated: event.updated.queue
-      eventDeleted: event.deleted.queue
-      ticketCreated: ticket.created.queue
-      ticketUpdated: ticket.updated.queue
-      ticketDeleted: ticket.deleted.queue
-      dead-letter: final.dead.letter.queue
+      userCreated: attendance.user.created.queue
+      userUpdated: attendance.user.updated.queue
+      userDeleted: attendance.user.deleted.queue
+      eventCreated: attendance.event.created.queue
+      eventUpdated: attendance.event.updated.queue
+      eventDeleted: attendance.event.deleted.queue
+      ticketCreated: attendance.ticket.created.queue
+      ticketUpdated: attendance.ticket.updated.queue
+      ticketDeleted: attendance.ticket.deleted.queue
+      dead-letter: attendance.final.dead.letter.queue
