@@ -15,10 +15,46 @@ public class RabbitConfig {
     @Value("${app.rabbitmq.exchanges.event}")
     private String eventExchangeName;
 
+    // --- ADDED FOR TESTING ---
+    @Value("${app.rabbitmq.routing.event-created}")
+    private String eventCreatedRoutingKey;
+
+    @Value("${app.rabbitmq.queues.test-events}")
+    private String eventsTestQueueName;
+
+    @Value("${app.rabbitmq.queues.test-notifications}")
+    private String notificationsTestQueueName;
+
 
     @Bean
     DirectExchange eventExchange() {
         return new DirectExchange(eventExchangeName);
+    }
+
+    @Bean
+    Queue eventsTestQueue() {
+        return new Queue(eventsTestQueueName, true);
+    }
+
+    @Bean
+    Queue notificationsTestQueue() {
+        return new Queue(notificationsTestQueueName, true);
+    }
+
+    @Bean
+    Binding eventsTestBinding() {
+        return BindingBuilder
+                .bind(eventsTestQueue())
+                .to(eventExchange())
+                .with(eventCreatedRoutingKey);
+    }
+
+    @Bean
+    Binding notificationsTestBinding() {
+        return BindingBuilder
+                .bind(notificationsTestQueue())
+                .to(eventExchange())
+                .with(eventCreatedRoutingKey);
     }
 
 
