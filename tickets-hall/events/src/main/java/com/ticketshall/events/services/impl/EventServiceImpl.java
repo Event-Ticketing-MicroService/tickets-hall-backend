@@ -8,6 +8,7 @@ import com.ticketshall.events.exceptions.NotFoundException;
 import com.ticketshall.events.mappers.EventMapper;
 import com.ticketshall.events.models.Category;
 import com.ticketshall.events.models.Event;
+import com.ticketshall.events.rabbitmq.producers.EventProducer;
 import com.ticketshall.events.repositories.CategoryRepository;
 import com.ticketshall.events.repositories.EventRepository;
 import com.ticketshall.events.repositories.specifications.EventSpecification;
@@ -27,12 +28,14 @@ public class EventServiceImpl implements EventService {
     private final EventMapper eventMapper;
     private final EventRepository eventRepository;
     private final CategoryRepository categoryRepository;
+    private final EventProducer eventProducer;
 
     @Autowired
-    public EventServiceImpl(EventRepository eventRepository, EventMapper eventMapper, CategoryRepository categoryRepository) {
+    public EventServiceImpl(EventRepository eventRepository, EventMapper eventMapper, CategoryRepository categoryRepository, EventProducer eventProducer) {
         this.eventRepository = eventRepository;
         this.eventMapper = eventMapper;
         this.categoryRepository = categoryRepository;
+        this.eventProducer = eventProducer;
     }
     @Override
     public Event createEvent(UpsertEventParams UpsertEventParams) {
@@ -40,8 +43,9 @@ public class EventServiceImpl implements EventService {
         if(category.isEmpty()) throw new NotFoundException("No category found with the given id");
         Event event = eventMapper.toEvent(UpsertEventParams);
         event.setCategory(category.get());
-        //TODO: push an EVENT_CREATED message to RabbitMQ
-        return eventRepository.save(event);
+        Event savedEvent = eventRepository.save(event);
+        eventProducer.sendEventCreated(eventMapper.toEventUpsertedMessage(event));
+        return savedEvent;
     }
 
     @Override
@@ -51,6 +55,7 @@ public class EventServiceImpl implements EventService {
         Event updatedEvent = eventOptional.get();
         eventMapper.updateEventFromUpsertParams(eventUpdateParams, updatedEvent);
         eventRepository.save(updatedEvent);
+        eventProducer.sendEventUpdated(eventMapper.toEventUpsertedMessage(updatedEvent));
     }
 
     @Override
@@ -69,16 +74,15 @@ public class EventServiceImpl implements EventService {
     @Override
     public void publishEvent(UUID eventId, PublishEventParams publishEventParams) {
         Optional<Event> eventOptional = eventRepository.findById(eventId);
-        if(eventOptional.isEmpty()) throw new NotFoundException("Event with given id is not found");
+        if (eventOptional.isEmpty()) throw new NotFoundException("Event with given id is not found");
         Event event = eventOptional.get();
 
         LocalDateTime now = LocalDateTime.now();
-        if(now.isAfter(event.getEndsAt())) throw new ConflictErrorException("Event has already ended");
+        if (now.isAfter(event.getEndsAt())) throw new ConflictErrorException("Event has already ended");
 
-        if(publishEventParams.getIsPublished() && !event.getIsPublished()) event.setPublishedAt(now);
+        if (publishEventParams.getIsPublished() && !event.getIsPublished()) event.setPublishedAt(now);
         event.setIsPublished(publishEventParams.getIsPublished());
         eventRepository.save(event);
+        eventProducer.sendEventUpdated(eventMapper.toEventUpsertedMessage(event));
     }
-
-
 }
