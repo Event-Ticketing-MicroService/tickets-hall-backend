@@ -1,5 +1,7 @@
 package com.ticketshall.events.mappers;
 
+import com.ticketshall.events.dtos.messages.EventDeletedMessage;
+import com.ticketshall.events.dtos.messages.EventUpsertedMessage;
 import com.ticketshall.events.dtos.params.UpsertEventParams;
 import com.ticketshall.events.dtos.responses.EventDTO;
 import com.ticketshall.events.models.Event;
@@ -21,4 +23,12 @@ public interface EventMapper {
     @Mapping(target = "isPublished", ignore = true)
     @Mapping(target = "publishedAt", ignore = true)
     void updateEventFromUpsertParams(UpsertEventParams upsertEventParams, @MappingTarget Event event);
+
+
+
+    EventDeletedMessage toEventDeletedMessage(Event event);
+
+    @Mapping(target = "startsAtUtc", source = "startsAt")
+    @Mapping(target = "endsAtUtc", source = "endsAt")
+    EventUpsertedMessage toEventUpsertedMessage(Event event);
 }
