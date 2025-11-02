@@ -8,11 +8,11 @@ WORKDIR /app
 # Copy parent pom.xml first for better caching
 COPY pom.xml ./pom.xml
 
-# Copy venues module pom.xml
-COPY tickets-hall-backend/tickets-hall/venues/pom.xml ./tickets-hall-backend/tickets-hall/venues/pom.xml
+# Copy tickets module pom.xml
+COPY venues/pom.xml ./venues/pom.xml
 
 # Copy source code
-COPY tickets-hall-backend/tickets-hall/venues/src .tickets-hall-backend/tickets-hall/venues/src/pom.xml
+COPY venues/src ./venues/src
 
 # Build the application
 RUN cd venues && mvn clean package -DskipTests
