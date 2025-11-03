@@ -11,7 +11,7 @@ import com.ticketshall.attendance.services.AttendanceService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/attendances")
+@RequestMapping("/attendances")
 @RequiredArgsConstructor
 public class AttendanceController {
 
