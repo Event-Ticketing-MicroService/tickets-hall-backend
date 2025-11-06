@@ -67,17 +67,17 @@ app:
       ticketDeleted: ticket.deleted
       paymentSucceeded: payment.succeeded
       paymentFailed: payment.failed
-      dead-letter: dead.letter
+      dead-letter: tickets.dead.letter
     queues:
-      userCreated: user.created.queue
-      userUpdated: user.updated.queue
-      userDeleted: user.deleted.queue
-      eventCreated: event.created.queue
-      eventUpdated: event.updated.queue
-      eventDeleted: event.deleted.queue
-      paymentSucceeded: payment.succeeded.queue
-      paymentFailed: payment.failed.queue
-      dead-letter: final.dead.letter.queue
+      userCreated: tickets.user.created.queue
+      userUpdated: tickets.user.updated.queue
+      userDeleted: tickets.user.deleted.queue
+      eventCreated: tickets.event.created.queue
+      eventUpdated: tickets.event.updated.queue
+      eventDeleted: tickets.event.deleted.queue
+      paymentSucceeded: tickets.payment.succeeded.queue
+      paymentFailed: tickets.payment.failed.queue
+      dead-letter: tickets.final.dead.letter.queue
 
 payment:
   service:
