@@ -25,7 +25,7 @@ spec:
         - name: SPRING_PROFILES_ACTIVE
           value: "k8s"
         - name: SPRING_DATASOURCE_URL
-          value: "jdbc:postgresql://postgres:5432/postgres"
+          value: "jdbc:postgresql://postgres-attendance:5432/attendance"
         - name: SPRING_DATASOURCE_USERNAME
           value: "postgres"
         - name: SPRING_DATASOURCE_PASSWORD
