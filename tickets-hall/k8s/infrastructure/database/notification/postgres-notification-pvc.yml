@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: postgres-pvc
+  name: postgres-notification-pvc
   namespace: tickets-hall
 spec:
   accessModes:

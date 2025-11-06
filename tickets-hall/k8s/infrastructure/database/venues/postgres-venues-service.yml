@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: postgres
+  name: postgres-venues
   namespace: tickets-hall
   labels:
-    app: postgres
+    app: postgres-venues
 spec:
   selector:
-    app: postgres
+    app: postgres-venues
   ports:
     - protocol: TCP
       port: 5432
