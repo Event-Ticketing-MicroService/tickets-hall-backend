@@ -74,5 +74,5 @@ app:
       ticketDeleted: ticket.deleted.queue
       dead-letter: final.dead.letter.queue
 jwt:
-    secret: supersecretkeysupersecretkey123456789
-    expiration: 15m
+    secret: Y9xk8mVw4pT2orangeZr7NsE1uL0aB5yH8dG4tX2cP9mW1vS6eJ3kQ0rU8zC7nF2
+    expiration: 1h

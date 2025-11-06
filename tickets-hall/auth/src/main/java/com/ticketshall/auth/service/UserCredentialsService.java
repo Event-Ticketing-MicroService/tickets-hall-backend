@@ -1,5 +1,6 @@
 package com.ticketshall.auth.service;
 
+import com.ticketshall.auth.model.UserCredentials;
 import com.ticketshall.auth.repository.UserCredentialsRepo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -15,7 +16,10 @@ public class UserCredentialsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        return userCredentialsRepo.findByEmail(email);
-
+        UserCredentials user = userCredentialsRepo.findByEmail(email);
+        if (user == null) {
+            throw new UsernameNotFoundException("User not found with email: " + email);
+        }
+        return user;
     }
 }
