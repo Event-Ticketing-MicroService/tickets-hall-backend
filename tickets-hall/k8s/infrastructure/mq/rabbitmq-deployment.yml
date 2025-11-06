@@ -38,23 +38,26 @@ spec:
           limits:
             memory: "512Mi"
             cpu: "500m"
+        startupProbe:
+          tcpSocket:
+            port: 5672
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 24
         readinessProbe:
-          exec:
-            command:
-              - rabbitmq-diagnostics
-              - ping
-          initialDelaySeconds: 20
+          tcpSocket:
+            port: 5672
+          initialDelaySeconds: 5
           periodSeconds: 10
-          timeoutSeconds: 5
-          failureThreshold: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
         livenessProbe:
-          exec:
-            command:
-              - rabbitmq-diagnostics
-              - ping
+          tcpSocket:
+            port: 5672
           initialDelaySeconds: 60
           periodSeconds: 30
-          timeoutSeconds: 10
+          timeoutSeconds: 3
           failureThreshold: 3
       volumes:
       - name: rabbitmq-storage
