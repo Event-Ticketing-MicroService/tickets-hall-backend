@@ -18,7 +18,7 @@ COPY venues/src ./venues/src
 RUN cd venues && mvn clean package -DskipTests
 
 # Stage 2: Runtime
-FROM openjdk:17-jdk-slim
+FROM eclipse-temurin:17-jre-alpine
 
 # Set working directory
 WORKDIR /app

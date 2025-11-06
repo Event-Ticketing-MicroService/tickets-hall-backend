@@ -18,7 +18,7 @@ COPY auth/src ./auth/src
 RUN cd auth && mvn clean package -DskipTests
 
 # Stage 2: Runtime
-FROM openjdk:17-jdk-slim
+FROM eclipse-temurin:17-jre-alpine
 
 # Set working directory
 WORKDIR /app
