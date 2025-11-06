@@ -12,10 +12,17 @@ spec:
     - host: tickets-hall.local
       http:
         paths:
-          - path: /service-name(/|$)(.*)
+          - path: /auth(/|$)(.*)
             pathType: ImplementationSpecific
             backend:
               service:
-                name: service-label
+                name: auth-service
                 port:
                   number: 80
+          # - path: /service-name(/|$)(.*)
+          #   pathType: ImplementationSpecific
+          #   backend:
+          #     service:
+          #       name: service-label
+          #       port:
+          #         number: 80
