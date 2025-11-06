@@ -1,0 +1,28 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: tickets-hall-ingress
+  namespace: tickets-hall
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: tickets-hall.local
+      http:
+        paths:
+          - path: /auth(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: auth-service
+                port:
+                  number: 80
+          # - path: /service-name(/|$)(.*)
+          #   pathType: ImplementationSpecific
+          #   backend:
+          #     service:
+          #       name: service-label
+          #       port:
+          #         number: 80

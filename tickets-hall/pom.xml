@@ -17,6 +17,7 @@
     <modules>
         <module>attendance</module>
         <module>customers</module>
+        <module>auth</module>
         <module>events</module>
         <module>notification</module>
         <module>payments</module>

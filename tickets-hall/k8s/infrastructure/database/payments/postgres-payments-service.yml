@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-payments
+  namespace: tickets-hall
+  labels:
+    app: postgres-payments
+spec:
+  selector:
+    app: postgres-payments
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432
+  type: ClusterIP

@@ -18,7 +18,7 @@ COPY attendance/src ./attendance/src
 RUN cd attendance && mvn clean package -DskipTests
 
 # Stage 2: Runtime
-FROM openjdk:17-jdk-slim
+FROM eclipse-temurin:17-jre-alpine
 
 # Set working directory
 WORKDIR /app
