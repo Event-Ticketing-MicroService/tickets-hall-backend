@@ -2,10 +2,7 @@ package com.ticketshall.venues.DTO.venueDTOS;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.*;
 
 import java.util.List;
@@ -23,6 +20,14 @@ public class VenuePatchDTO {
 
     @Size(min = 3, message = "Address must have at least 3 characters")
     private String venueAddress;
+
+    @DecimalMin(value = "-90.0", message = "Latitude must be greater than or equal to -90")
+    @DecimalMax(value = "90.0", message = "Latitude must be less than or equal to 90")
+    private double longitude;
+
+    @DecimalMin(value = "-90.0", message = "Latitude must be greater than or equal to -90")
+    @DecimalMax(value = "90.0", message = "Latitude must be less than or equal to 90")
+    private double latitude;
 
     // Optional but validated if present
     @Pattern(regexp = "^[0-9]{7,15}$", message = "Phone must be numeric and valid length")

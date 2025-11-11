@@ -27,6 +27,12 @@ public class Venue {
     private String venueAddress;
 
     @Column(nullable = false)
+    private double longitude;
+
+    @Column(nullable = false)
+    private double latitude;
+
+    @Column(nullable = false)
     private String venuePhone;
 
     @Column(nullable = false)
