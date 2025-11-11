@@ -23,6 +23,8 @@ public class VenueResponseDTO {
     private String venueEmail;
     private int venueCapacity;
     private String venueDescription;
+    private double longitude;
+    private double latitude;
     private String venueCountry;
     private List<VenueImageResponseDTO> venueImages;
     private List<String> venueWorkers;

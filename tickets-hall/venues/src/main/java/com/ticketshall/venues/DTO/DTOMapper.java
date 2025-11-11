@@ -30,6 +30,8 @@ public class DTOMapper {
                 .venueCountry(venue.getVenueCountry())
                 .venuePhone(venue.getVenuePhone())
                 .venueEmail(venue.getVenueEmail())
+                .latitude(venue.getLatitude())
+                .longitude(venue.getLongitude())
                 .venueImages(
                         venue.getVenueImages().stream()
                                 .map(img -> new VenueImageResponseDTO(img.getVenueImageID(), img.getImageURL()))
@@ -53,6 +55,8 @@ public class DTOMapper {
                  .venueCountry(venueRequestDTO.getVenueCountry())
                  .venuePhone(venueRequestDTO.getVenuePhone())
                  .venueEmail(venueRequestDTO.getVenueEmail())
+                 .latitude(venueRequestDTO.getLatitude())
+                 .longitude(venueRequestDTO.getLongitude())
                  .build();
         if (venueRequestDTO.getVenueImages() != null) {
             List<VenueImage> images = venueRequestDTO.getVenueImages().stream()
