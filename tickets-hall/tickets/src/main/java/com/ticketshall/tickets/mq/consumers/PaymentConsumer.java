@@ -59,12 +59,13 @@ public class PaymentConsumer {
             ticketType.setAvailableStock(ticketType.getAvailableStock() - item.getQuantity());
             ticketTypeRepository.save(ticketType);
             Attendee attendee = attendeeRepository.getReferenceById(reservation.getAttendeeId());
+            String ticketCode = ticketType.getName() + "-" + UUID.randomUUID();
             Event event = eventRepository.getReferenceById(reservation.getEventId());
             Ticket ticket = Ticket
                     .builder()
                     .attendee(attendee)
                     .event(event)
-                    .code(UUID.randomUUID().toString())
+                    .code(ticketCode)
                     .ticketType(ticketType)
                     .build();
             ticket = ticketRepository.save(ticket);
