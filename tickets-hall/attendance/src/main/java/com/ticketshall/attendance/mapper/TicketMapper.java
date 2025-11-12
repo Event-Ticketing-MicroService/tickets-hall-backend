@@ -1,8 +1,8 @@
 package com.ticketshall.attendance.mapper;
 
-import com.ticketshall.attendance.events.TicketCreatedEvent;
-import com.ticketshall.attendance.events.TicketUpdatedEvent;
-import com.ticketshall.attendance.models.Ticket;
+import com.ticketshall.attendance.mq.events.TicketCreatedEvent;
+import com.ticketshall.attendance.mq.events.TicketUpdatedEvent;
+import com.ticketshall.attendance.entity.Ticket;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 

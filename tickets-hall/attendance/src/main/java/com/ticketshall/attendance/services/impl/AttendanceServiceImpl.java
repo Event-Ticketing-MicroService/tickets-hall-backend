@@ -1,12 +1,14 @@
-package com.ticketshall.attendance.services;
+package com.ticketshall.attendance.services.impl;
 
 import java.time.LocalDateTime;
+
+import com.ticketshall.attendance.services.AttendanceService;
 import org.springframework.stereotype.Service;
 
 import com.ticketshall.attendance.error.exceptions.EventAlreadyEndedException;
 import com.ticketshall.attendance.error.exceptions.TicketAlreadyUsedException;
 import com.ticketshall.attendance.error.exceptions.TicketNotFoundException;
-import com.ticketshall.attendance.models.Ticket;
+import com.ticketshall.attendance.entity.Ticket;
 import com.ticketshall.attendance.repository.TicketRepository;
 
 import lombok.RequiredArgsConstructor;

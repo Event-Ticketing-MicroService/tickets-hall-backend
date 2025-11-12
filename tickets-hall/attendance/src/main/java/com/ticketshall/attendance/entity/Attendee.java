@@ -1,4 +1,4 @@
-package com.ticketshall.attendance.models;
+package com.ticketshall.attendance.entity;
 
 import java.util.UUID;
 

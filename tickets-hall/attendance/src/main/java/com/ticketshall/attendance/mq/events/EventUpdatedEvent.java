@@ -1,4 +1,4 @@
-package com.ticketshall.attendance.events;
+package com.ticketshall.attendance.mq.events;
 
 import java.time.LocalDateTime;
 import java.util.UUID;

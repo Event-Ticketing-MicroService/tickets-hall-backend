@@ -1,8 +1,8 @@
 package com.ticketshall.attendance.mapper;
 
-import com.ticketshall.attendance.events.AttendeeCreatedEvent;
-import com.ticketshall.attendance.events.AttendeeUpdatedEvent;
-import com.ticketshall.attendance.models.Attendee;
+import com.ticketshall.attendance.mq.events.AttendeeCreatedEvent;
+import com.ticketshall.attendance.mq.events.AttendeeUpdatedEvent;
+import com.ticketshall.attendance.entity.Attendee;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
