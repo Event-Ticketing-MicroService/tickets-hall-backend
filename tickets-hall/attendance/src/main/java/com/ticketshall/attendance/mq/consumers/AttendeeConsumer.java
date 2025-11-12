@@ -1,20 +1,22 @@
-package com.ticketshall.tickets.mq.consumers;
+package com.ticketshall.attendance.mq.consumers;
 
-import com.ticketshall.tickets.constants.GeneralConstants;
-import com.ticketshall.tickets.mapper.AttendeeMapper;
-import com.ticketshall.tickets.models.Attendee;
-import com.ticketshall.tickets.models.InboxMessage;
-import com.ticketshall.tickets.models.id.InboxMessageId;
-import com.ticketshall.tickets.mq.events.AttendeeCreatedEvent;
-import com.ticketshall.tickets.mq.events.AttendeeDeletedEvent;
-import com.ticketshall.tickets.mq.events.AttendeeUpdatedEvent;
-import com.ticketshall.tickets.repository.AttendeeRepository;
-import com.ticketshall.tickets.repository.InboxRepository;
+import com.ticketshall.attendance.constants.GeneralConstants;
+import com.ticketshall.attendance.entity.id.InboxMessageId;
+import com.ticketshall.attendance.mq.events.AttendeeCreatedEvent;
+import com.ticketshall.attendance.mq.events.AttendeeDeletedEvent;
+import com.ticketshall.attendance.mq.events.AttendeeUpdatedEvent;
+import com.ticketshall.attendance.mapper.AttendeeMapper;
+import com.ticketshall.attendance.entity.InboxMessage;
+import com.ticketshall.attendance.repository.InboxRepository;
 import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Service;
+
+import com.ticketshall.attendance.entity.Attendee;
+import com.ticketshall.attendance.repository.AttendeeRepository;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
 
@@ -57,7 +59,7 @@ public class AttendeeConsumer {
             Attendee attendee = attendeeMapper.toAttendee(event);
             attendeeRepository.save(attendee);
             saveInboxRecord(inboxMessageId);
-        }  catch (Exception e) {
+        } catch (Exception e) {
             log.error("Error processing UserUpdatedEvent: {}", event, e);
             throw e;
         }
@@ -74,7 +76,7 @@ public class AttendeeConsumer {
             log.info("Processing UserDeletedEvent: {}", event);
             attendeeRepository.deleteById(event.id());
             saveInboxRecord(inboxMessageId);
-        }  catch (Exception e) {
+        } catch (Exception e) {
             log.error("Error processing UserDeletedEvent: {}", event, e);
             throw e;
         }
@@ -87,4 +89,3 @@ public class AttendeeConsumer {
         inboxRepository.save(message);
     }
 }
-

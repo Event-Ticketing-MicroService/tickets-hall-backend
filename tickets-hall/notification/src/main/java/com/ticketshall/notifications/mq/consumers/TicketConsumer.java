@@ -1,9 +1,14 @@
 package com.ticketshall.notifications.mq.consumers;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.ticketshall.notifications.constants.GeneralConstants;
+import com.ticketshall.notifications.entity.InboxMessage;
+import com.ticketshall.notifications.entity.id.InboxMessageId;
+import com.ticketshall.notifications.repository.InboxRepository;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Service;
 
@@ -27,9 +32,14 @@ public class TicketConsumer {
     private final UserRepository userRepository;
     private final EventRepository eventRepository;
     private final QrCodeService qrCodeService;
+    private final InboxRepository inboxRepository;
 
     @RabbitListener(queues = "${app.rabbitmq.queues.ticketCreated}")
     public void handleTicketCreated(TicketCreatedEvent ticketCreatedEvent) throws WriterException, IOException, MessagingException {
+        InboxMessageId inboxMessageId = new  InboxMessageId(ticketCreatedEvent.id(), GeneralConstants.TICKET_CREATED_INBOX_TYPE);
+        if (inboxRepository.existsById(inboxMessageId)) {
+            return;
+        }
         User user = userRepository.findById(ticketCreatedEvent.userId()).orElseThrow();
 
         Event event = eventRepository.findById(ticketCreatedEvent.eventId()).orElseThrow();
@@ -46,6 +56,13 @@ public class TicketConsumer {
         variables.put("qrCode", qrCodeBase64);
 
         emailService.sendTemplate("ticket-created", user.getEmail(), "Ticket for " + event.getTitle(), variables);
+        saveInboxRecord(inboxMessageId);
     }
-
+    private void saveInboxRecord(InboxMessageId id) {
+        InboxMessage message = InboxMessage.builder()
+                .inboxMessageId(id)
+                .receivedAt(LocalDateTime.now())
+                .build();
+        inboxRepository.save(message);
+    }
 }

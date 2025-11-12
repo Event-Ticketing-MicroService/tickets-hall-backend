@@ -1,20 +1,15 @@
 package com.ticketshall.tickets.mq.consumers;
 
 import com.ticketshall.tickets.exceptions.TicketTypeNotFoundException;
-import com.ticketshall.tickets.models.Attendee;
-import com.ticketshall.tickets.models.Event;
-import com.ticketshall.tickets.models.Ticket;
-import com.ticketshall.tickets.models.TicketType;
+import com.ticketshall.tickets.models.*;
+import com.ticketshall.tickets.models.id.InboxMessageId;
 import com.ticketshall.tickets.models.nonStoredModels.Reservation;
 import com.ticketshall.tickets.models.nonStoredModels.ReservationItem;
 import com.ticketshall.tickets.models.nonStoredModels.constants.GeneralConstants;
 import com.ticketshall.tickets.mq.events.PaymentFailedEvent;
 import com.ticketshall.tickets.mq.events.PaymentSucceededEvent;
 import com.ticketshall.tickets.mq.events.TicketCreatedEvent;
-import com.ticketshall.tickets.repository.AttendeeRepository;
-import com.ticketshall.tickets.repository.EventRepository;
-import com.ticketshall.tickets.repository.TicketRepository;
-import com.ticketshall.tickets.repository.TicketTypeRepository;
+import com.ticketshall.tickets.repository.*;
 import com.ticketshall.tickets.service.ReservationService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +20,7 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -39,13 +35,12 @@ public class PaymentConsumer {
     private final RedissonClient redissonClient;
     private final ReservationService reservationService;
     private final RabbitTemplate rabbitTemplate;
+    private final InboxRepository inboxRepository;
 
     @Value("${app.rabbitmq.exchanges.payment}")
     private String paymentExchange;
     @Value("${app.rabbitmq.routing.paymentSucceeded}")
     private String paymentSucceededRoutingKey;
-    @Value("${app.rabbitmq.routing.paymentFailed}")
-    private String paymentFailedRoutingKey;
 
     @RabbitListener(queues = "${app.rabbitmq.queues.paymentSucceeded}")
     @Transactional

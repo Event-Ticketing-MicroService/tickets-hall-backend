@@ -1,15 +1,15 @@
-package com.ticketshall.tickets.mq.consumers;
+package com.ticketshall.attendance.mq.consumers;
 
-import com.ticketshall.tickets.constants.GeneralConstants;
-import com.ticketshall.tickets.mapper.EventMapper;
-import com.ticketshall.tickets.models.Event;
-import com.ticketshall.tickets.models.InboxMessage;
-import com.ticketshall.tickets.models.id.InboxMessageId;
-import com.ticketshall.tickets.mq.events.EventCreatedEvent;
-import com.ticketshall.tickets.mq.events.EventDeletedEvent;
-import com.ticketshall.tickets.mq.events.EventUpdatedEvent;
-import com.ticketshall.tickets.repository.EventRepository;
-import com.ticketshall.tickets.repository.InboxRepository;
+import com.ticketshall.attendance.constants.GeneralConstants;
+import com.ticketshall.attendance.entity.id.InboxMessageId;
+import com.ticketshall.attendance.mq.events.EventCreatedEvent;
+import com.ticketshall.attendance.mq.events.EventDeletedEvent;
+import com.ticketshall.attendance.mq.events.EventUpdatedEvent;
+import com.ticketshall.attendance.mapper.EventMapper;
+import com.ticketshall.attendance.entity.Event;
+import com.ticketshall.attendance.entity.InboxMessage;
+import com.ticketshall.attendance.repository.EventRepository;
+import com.ticketshall.attendance.repository.InboxRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,13 +23,13 @@ import java.time.LocalDateTime;
 @Slf4j
 public class EventConsumer {
     private final EventRepository eventRepository;
-    private final EventMapper eventMapper;
     private final InboxRepository inboxRepository;
+    private final EventMapper eventMapper;
 
     @RabbitListener(queues = "${app.rabbitmq.queues.eventCreated}")
     @Transactional
     public void handleEventCreated(EventCreatedEvent event) {
-        InboxMessageId inboxMessageId = new InboxMessageId(event.id(), GeneralConstants.Event_Created_INBOX_TYPE);
+        InboxMessageId  inboxMessageId = new InboxMessageId(event.id(), GeneralConstants.Event_Created_INBOX_TYPE);
         if (inboxRepository.existsById(inboxMessageId)) {
             return;
         }
@@ -72,7 +72,7 @@ public class EventConsumer {
     @RabbitListener(queues = "${app.rabbitmq.queues.eventDeleted}")
     @Transactional
     public void handleEventDeleted(EventDeletedEvent event) {
-        InboxMessageId inboxMessageId = new InboxMessageId(event.id(), GeneralConstants.Event_Deleted_INBOX_TYPE);
+        InboxMessageId inboxMessageId  = new InboxMessageId(event.id(), GeneralConstants.Event_Deleted_INBOX_TYPE);
         if (inboxRepository.existsById(inboxMessageId)) {
             return;
         }
