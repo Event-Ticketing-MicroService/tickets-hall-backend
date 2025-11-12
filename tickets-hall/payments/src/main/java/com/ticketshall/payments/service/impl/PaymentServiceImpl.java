@@ -4,14 +4,19 @@ import com.stripe.exception.StripeException;
 import com.stripe.model.Event;
 import com.stripe.model.PaymentIntent;
 import com.stripe.net.Webhook;
+import com.ticketshall.payments.constants.GeneralConstants;
 import com.ticketshall.payments.dto.CreatePaymentRequest;
 import com.ticketshall.payments.dto.CreatePaymentResponse;
+import com.ticketshall.payments.entity.OutboxMessage;
 import com.ticketshall.payments.entity.Payment;
+import com.ticketshall.payments.helpers.JsonUtil;
 import com.ticketshall.payments.mq.events.PaymentFailedEvent;
 import com.ticketshall.payments.mq.events.PaymentSucceededEvent;
 import com.ticketshall.payments.mq.producer.PaymentEventProducer;
+import com.ticketshall.payments.repository.OutboxRepository;
 import com.ticketshall.payments.repository.PaymentRepo;
 import com.ticketshall.payments.service.PaymentService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,7 +34,8 @@ public class PaymentServiceImpl implements PaymentService {
     private String webhookSecret;
 
     private final PaymentRepo paymentRepo;
-    private final PaymentEventProducer paymentEventProducer;
+    private final OutboxRepository outboxRepository;
+    private final JsonUtil jsonUtil;
 
     @Override
     public CreatePaymentResponse createPayment(CreatePaymentRequest request) throws StripeException {
@@ -63,6 +69,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
+    @Transactional
     public String handleWebhook(String payload, String sigHeader) {
         try {
             log.error("Received webhook: {}", payload);
@@ -78,7 +85,8 @@ public class PaymentServiceImpl implements PaymentService {
         }
     }
 
-    private void handlePaymentEvent(Event event, boolean succeeded) {
+    @Transactional
+    public void handlePaymentEvent(Event event, boolean succeeded) {
         PaymentIntent paymentIntent = (PaymentIntent) event.getDataObjectDeserializer().getObject().orElse(null);
         if (paymentIntent != null) {
             // set payment in database
@@ -92,10 +100,24 @@ public class PaymentServiceImpl implements PaymentService {
             // publish payment success event in rabbitmq
             if (succeeded) {
                 PaymentSucceededEvent paymentSucceededEvent = new PaymentSucceededEvent(payment.getReservationId());
-                paymentEventProducer.publishPaymentSucceededEvent(paymentSucceededEvent);
+//                paymentEventProducer.publishPaymentSucceededEvent(paymentSucceededEvent);
+                OutboxMessage outboxMessage = OutboxMessage.builder()
+                        .type(GeneralConstants.PAYMENT_SUCCEEDED_OUTBOX_TYPE)
+                        .payload(jsonUtil.toJson(paymentSucceededEvent))
+                        .processed(false)
+                        .createdAt(LocalDateTime.now())
+                        .build();
+                outboxRepository.save(outboxMessage);
             } else {
                 PaymentFailedEvent paymentFailedEvent = new PaymentFailedEvent(payment.getReservationId());
-                paymentEventProducer.publishPaymentFailedEvent(paymentFailedEvent);
+//                paymentEventProducer.publishPaymentFailedEvent(paymentFailedEvent);
+                OutboxMessage outboxMessage = OutboxMessage.builder()
+                        .type(GeneralConstants.PAYMENT_SUCCEEDED_OUTBOX_TYPE)
+                        .payload(jsonUtil.toJson(paymentFailedEvent))
+                        .processed(false)
+                        .createdAt(LocalDateTime.now())
+                        .build();
+                outboxRepository.save(outboxMessage);
             }
         }
     }
