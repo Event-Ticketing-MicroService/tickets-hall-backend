@@ -7,6 +7,7 @@ import java.util.Map;
 
 import com.ticketshall.notifications.constants.GeneralConstants;
 import com.ticketshall.notifications.entity.InboxMessage;
+import com.ticketshall.notifications.entity.id.InboxMessageId;
 import com.ticketshall.notifications.repository.InboxRepository;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Service;
@@ -35,7 +36,8 @@ public class TicketConsumer {
 
     @RabbitListener(queues = "${app.rabbitmq.queues.ticketCreated}")
     public void handleTicketCreated(TicketCreatedEvent ticketCreatedEvent) throws WriterException, IOException, MessagingException {
-        if (inboxRepository.existsById(ticketCreatedEvent.id())) {
+        InboxMessageId inboxMessageId = new  InboxMessageId(ticketCreatedEvent.id(), GeneralConstants.TICKET_CREATED_INBOX_TYPE);
+        if (inboxRepository.existsById(inboxMessageId)) {
             return;
         }
         User user = userRepository.findById(ticketCreatedEvent.userId()).orElseThrow();
@@ -54,12 +56,13 @@ public class TicketConsumer {
         variables.put("qrCode", qrCodeBase64);
 
         emailService.sendTemplate("ticket-created", user.getEmail(), "Ticket for " + event.getTitle(), variables);
-        InboxMessage inboxMessage = InboxMessage.builder()
-                .id(ticketCreatedEvent.id())
-                .type(GeneralConstants.TICKET_CREATED_INBOX_TYPE)
+        saveInboxRecord(inboxMessageId);
+    }
+    private void saveInboxRecord(InboxMessageId id) {
+        InboxMessage message = InboxMessage.builder()
+                .inboxMessageId(id)
                 .receivedAt(LocalDateTime.now())
                 .build();
-        inboxRepository.save(inboxMessage);
+        inboxRepository.save(message);
     }
-
 }
