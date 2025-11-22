@@ -3,6 +3,7 @@ package com.ticketshall.events.exceptions;
 import com.ticketshall.events.dtos.responses.ApiErrorResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.catalina.connector.Response;
+import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @Slf4j
@@ -64,6 +66,34 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
+
+    @ExceptionHandler(PropertyReferenceException.class)
+    public ResponseEntity<ApiErrorResponse> handlePropertyReferenceException(PropertyReferenceException e) {
+        log.warn("Invalid Sort Param: {}", e.getMessage());
+        String errorMessage = "Invalid sort property '" + e.getPropertyName() + "'";
+        ApiErrorResponse errorResponse = new ApiErrorResponse(
+                "BAD_REQUEST",
+                errorMessage,
+                HttpStatus.BAD_REQUEST.value()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
+
+    @ExceptionHandler(MissingServletRequestPartException.class)
+    public ResponseEntity<ApiErrorResponse> handleMissingServletRequestPartException(MissingServletRequestPartException e) {
+        log.warn("Missing Request Part: {}", e.getMessage());
+
+        // This makes a readable error like: "Required part 'image' is not present" in endpoints that required multipart form data keys such as "image"
+        String errorMessage = e.getMessage();
+
+        ApiErrorResponse errorResponse = new ApiErrorResponse(
+                "BAD_REQUEST",
+                errorMessage,
+                HttpStatus.BAD_REQUEST.value()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
+
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse> handleUnexpectedException(Exception e) {

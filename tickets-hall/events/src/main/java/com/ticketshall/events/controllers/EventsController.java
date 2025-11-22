@@ -62,7 +62,6 @@ public class EventsController {
     }
 
 
-    // TODO: get events paginated/filtered/sorted
     @GetMapping("")
     ResponseEntity<?> getAllEvents(
             EventFilterParams eventFilterParams,
