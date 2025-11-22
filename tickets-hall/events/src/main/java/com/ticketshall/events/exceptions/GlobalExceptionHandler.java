@@ -3,6 +3,7 @@ package com.ticketshall.events.exceptions;
 import com.ticketshall.events.dtos.responses.ApiErrorResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.catalina.connector.Response;
+import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -63,6 +64,18 @@ public class GlobalExceptionHandler {
                 "BAD_REQUEST", errors, HttpStatus.BAD_REQUEST.value());
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @ExceptionHandler(PropertyReferenceException.class)
+    public ResponseEntity<ApiErrorResponse> handlePropertyReferenceException(PropertyReferenceException e) {
+        log.warn("Invalid Sort Param: {}", e.getMessage());
+        String errorMessage = "Invalid sort property '" + e.getPropertyName() + "'";
+        ApiErrorResponse errorResponse = new ApiErrorResponse(
+                "BAD_REQUEST",
+                errorMessage,
+                HttpStatus.BAD_REQUEST.value()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
 
     @ExceptionHandler(Exception.class)
