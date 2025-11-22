@@ -33,9 +33,6 @@ public class UpsertEventParams {
     @NotNull(message = "longitude is required")
     private Double longitude;
 
-    @URL(message = "backgroundImageUrl must be a valid url")
-    private String backgroundImageUrl;
-
 
     @NotNull(message = "startsAt date is required")
     @Future(message = "Event starting date must be in the future")

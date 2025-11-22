@@ -9,16 +9,20 @@ import com.ticketshall.events.mappers.EventMapper;
 import com.ticketshall.events.models.Event;
 import com.ticketshall.events.services.EventService;
 import com.ticketshall.events.validations.EventValidator;
+import com.ticketshall.events.validations.ImageValidator;
 import jakarta.servlet.ServletRequest;
 import jakarta.validation.Valid;
+import org.hibernate.annotations.PartitionKey;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.UUID;
 
@@ -36,12 +40,16 @@ public class EventsController {
         this.eventMapper = eventMapper;
     }
 
-    @PostMapping("")
-    ResponseEntity<?> createEvent(@Valid @RequestBody UpsertEventParams UpsertEventParams) {
-        EventValidator eventValidator = new EventValidator(UpsertEventParams);
-        eventValidator.validate();
 
-        Event event = eventService.createEvent(UpsertEventParams);
+    @PostMapping(value = "", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    ResponseEntity<?> createEvent(@Valid  UpsertEventParams UpsertEventParams,
+                                  @RequestPart("image") MultipartFile image) {
+        EventValidator eventValidator = new EventValidator(UpsertEventParams);
+        ImageValidator imageValidator = new ImageValidator(image, false);
+        eventValidator.validate();
+        imageValidator.validate();
+
+        Event event = eventService.createEvent(UpsertEventParams, image);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(eventMapper.toEventDTO(event));
     }
@@ -78,9 +86,14 @@ public class EventsController {
 
     // TODO: update event
 
-    @PutMapping("/{id}")
-    ResponseEntity<?> updateEvent(@PathVariable UUID id, @RequestBody UpsertEventParams upsertEventParams, ServletRequest servletRequest) {
-        eventService.updateEvent(id, upsertEventParams);
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    ResponseEntity<?> updateEvent(@PathVariable UUID id, @Valid UpsertEventParams upsertEventParams, @RequestPart("image") MultipartFile image) {
+        EventValidator eventValidator = new EventValidator(upsertEventParams);
+        ImageValidator imageValidator = new ImageValidator(image, true);
+        eventValidator.validate();
+        imageValidator.validate();
+
+        eventService.updateEvent(id, upsertEventParams, image);
         return ResponseEntity.noContent().build();
     }
 }

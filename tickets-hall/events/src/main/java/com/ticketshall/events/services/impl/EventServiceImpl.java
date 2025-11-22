@@ -26,6 +26,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -38,43 +39,71 @@ public class EventServiceImpl implements EventService {
     private final CategoryRepository categoryRepository;
     private final OutboxRepository outboxRepository;
     private final JsonUtil jsonUtil;
+    private final CloudinaryService cloudinaryService;
 
     @Autowired
-    public EventServiceImpl(EventRepository eventRepository, EventMapper eventMapper, CategoryRepository categoryRepository, OutboxRepository outboxRepository, JsonUtil jsonUtil, GlobalExceptionHandler globalExceptionHandler) {
+    public EventServiceImpl(EventRepository eventRepository, EventMapper eventMapper, CategoryRepository categoryRepository, OutboxRepository outboxRepository, JsonUtil jsonUtil, GlobalExceptionHandler globalExceptionHandler, CloudinaryService cloudinaryService) {
         this.eventRepository = eventRepository;
         this.eventMapper = eventMapper;
         this.categoryRepository = categoryRepository;
         this.outboxRepository = outboxRepository;
         this.jsonUtil = jsonUtil;
+        this.cloudinaryService = cloudinaryService;
     }
+
+
     @Override
     @Transactional
-    public Event createEvent(UpsertEventParams UpsertEventParams) {
-        Optional<Category> category = categoryRepository.findById(UpsertEventParams.getCategoryId());
-        if(category.isEmpty()) throw new NotFoundException("No category found with the given id");
-        Event event = eventMapper.toEvent(UpsertEventParams);
-        event.setCategory(category.get());
-        Event savedEvent = eventRepository.save(event);
+    public Event createEvent(UpsertEventParams UpsertEventParams, MultipartFile image) {
+        String imageUrl = "";
+        try {
+            Optional<Category> category = categoryRepository.findById(UpsertEventParams.getCategoryId());
+            if(category.isEmpty()) throw new NotFoundException("No category found with the given id");
+            Event event = eventMapper.toEvent(UpsertEventParams);
+            event.setCategory(category.get());
+
+            // upload and set imageUrl
+            // TODO: This blocks the DB connection for the uploading time, we
+            //  can use TransactionalTemplate to only make a transaction for db writes without the img upload time
+            imageUrl = cloudinaryService.uploadImage(image);
+            event.setBackgroundImageUrl(imageUrl);
+
+            Event savedEvent = eventRepository.save(event);
 //        eventProducer.sendEventCreated(eventMapper.toEventUpsertedMessage(event)); I publish the event in the scheduler after checking that it's still pending
-        OutboxMessage outboxMessage = OutboxMessage.builder()
-                .type(GeneralConstants.EVENT_CREATED_OUTBOX_TYPE)
-                .payload(jsonUtil.toJson(eventMapper.toEventUpsertedMessage(event)))
-                .createdAt(LocalDateTime.now())
-                .processed(false)
-                .build();
-        outboxRepository.save(outboxMessage);
-        return savedEvent;
+            OutboxMessage outboxMessage = OutboxMessage.builder()
+                    .type(GeneralConstants.EVENT_CREATED_OUTBOX_TYPE)
+                    .payload(jsonUtil.toJson(eventMapper.toEventUpsertedMessage(event)))
+                    .createdAt(LocalDateTime.now())
+                    .processed(false)
+                    .build();
+            outboxRepository.save(outboxMessage);
+            return savedEvent;
+        } catch (Exception e) {
+            if(!imageUrl.isEmpty()) cloudinaryService.deleteImage(imageUrl);
+            throw e;
+        }
     }
 
     @Override
     @Transactional
     @CacheEvict(value = GeneralConstants.EVENTS_CACHE_NAME, key = "#id")
-    public void updateEvent(UUID id, UpsertEventParams eventUpdateParams) {
+    public void updateEvent(UUID id, UpsertEventParams eventUpdateParams, MultipartFile image) {
         Optional<Event> eventOptional = eventRepository.findById(id);
         if(eventOptional.isEmpty()) throw new NotFoundException("Event with given id is not found");
         Event updatedEvent = eventOptional.get();
         eventMapper.updateEventFromUpsertParams(eventUpdateParams, updatedEvent);
+
+        if(!image.isEmpty()) {
+            String oldImageUrl = updatedEvent.getBackgroundImageUrl();
+            if(oldImageUrl != null) {
+                cloudinaryService.deleteImage(oldImageUrl);
+            }
+            String imageUrl = cloudinaryService.uploadImage(image);
+            updatedEvent.setBackgroundImageUrl(imageUrl);
+        }
+
         eventRepository.save(updatedEvent);
+
         OutboxMessage outboxMessage = OutboxMessage.builder()
                 .type(GeneralConstants.EVENT_UPDATED_OUTBOX_TYPE)
                 .payload(jsonUtil.toJson(eventMapper.toEventUpsertedMessage(updatedEvent)))
