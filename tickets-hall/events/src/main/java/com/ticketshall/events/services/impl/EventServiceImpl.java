@@ -101,6 +101,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     @CacheEvict(value = GeneralConstants.EVENTS_CACHE_NAME, key = "#eventId")
+    @Transactional
     public void publishEvent(UUID eventId, PublishEventParams publishEventParams) {
         Optional<Event> eventOptional = eventRepository.findById(eventId);
         if (eventOptional.isEmpty()) throw new NotFoundException("Event with given id is not found");
