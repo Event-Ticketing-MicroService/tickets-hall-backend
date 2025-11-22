@@ -12,6 +12,7 @@ import com.ticketshall.events.validations.EventValidator;
 import com.ticketshall.events.validations.ImageValidator;
 import jakarta.servlet.ServletRequest;
 import jakarta.validation.Valid;
+import org.hibernate.annotations.PartitionKey;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -85,9 +86,14 @@ public class EventsController {
 
     // TODO: update event
 
-    @PutMapping("/{id}")
-    ResponseEntity<?> updateEvent(@PathVariable UUID id, @RequestBody UpsertEventParams upsertEventParams, ServletRequest servletRequest) {
-        eventService.updateEvent(id, upsertEventParams);
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    ResponseEntity<?> updateEvent(@PathVariable UUID id, @Valid UpsertEventParams upsertEventParams, @RequestPart("image") MultipartFile image) {
+        EventValidator eventValidator = new EventValidator(upsertEventParams);
+        ImageValidator imageValidator = new ImageValidator(image, true);
+        eventValidator.validate();
+        imageValidator.validate();
+
+        eventService.updateEvent(id, upsertEventParams, image);
         return ResponseEntity.noContent().build();
     }
 }

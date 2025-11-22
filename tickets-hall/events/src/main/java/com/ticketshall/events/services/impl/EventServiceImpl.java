@@ -79,12 +79,19 @@ public class EventServiceImpl implements EventService {
     @Override
     @Transactional
     @CacheEvict(value = GeneralConstants.EVENTS_CACHE_NAME, key = "#id")
-    public void updateEvent(UUID id, UpsertEventParams eventUpdateParams) {
+    public void updateEvent(UUID id, UpsertEventParams eventUpdateParams, MultipartFile image) {
         Optional<Event> eventOptional = eventRepository.findById(id);
         if(eventOptional.isEmpty()) throw new NotFoundException("Event with given id is not found");
         Event updatedEvent = eventOptional.get();
         eventMapper.updateEventFromUpsertParams(eventUpdateParams, updatedEvent);
+
+        if(!image.isEmpty()) {
+            String imageUrl = cloudinaryService.uploadImage(image);
+            updatedEvent.setBackgroundImageUrl(imageUrl);
+        }
+
         eventRepository.save(updatedEvent);
+
         OutboxMessage outboxMessage = OutboxMessage.builder()
                 .type(GeneralConstants.EVENT_UPDATED_OUTBOX_TYPE)
                 .payload(jsonUtil.toJson(eventMapper.toEventUpsertedMessage(updatedEvent)))
