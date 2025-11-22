@@ -26,6 +26,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -38,22 +39,31 @@ public class EventServiceImpl implements EventService {
     private final CategoryRepository categoryRepository;
     private final OutboxRepository outboxRepository;
     private final JsonUtil jsonUtil;
+    private final CloudinaryService cloudinaryService;
 
     @Autowired
-    public EventServiceImpl(EventRepository eventRepository, EventMapper eventMapper, CategoryRepository categoryRepository, OutboxRepository outboxRepository, JsonUtil jsonUtil, GlobalExceptionHandler globalExceptionHandler) {
+    public EventServiceImpl(EventRepository eventRepository, EventMapper eventMapper, CategoryRepository categoryRepository, OutboxRepository outboxRepository, JsonUtil jsonUtil, GlobalExceptionHandler globalExceptionHandler, CloudinaryService cloudinaryService) {
         this.eventRepository = eventRepository;
         this.eventMapper = eventMapper;
         this.categoryRepository = categoryRepository;
         this.outboxRepository = outboxRepository;
         this.jsonUtil = jsonUtil;
+        this.cloudinaryService = cloudinaryService;
     }
     @Override
     @Transactional
-    public Event createEvent(UpsertEventParams UpsertEventParams) {
+    public Event createEvent(UpsertEventParams UpsertEventParams, MultipartFile image) {
         Optional<Category> category = categoryRepository.findById(UpsertEventParams.getCategoryId());
         if(category.isEmpty()) throw new NotFoundException("No category found with the given id");
         Event event = eventMapper.toEvent(UpsertEventParams);
         event.setCategory(category.get());
+
+        // upload and set imageUrl
+        // TODO: This blocks the DB connection for the uploading time, we
+        //  can use TransactionalTemplate to only make a transaction for db writes without the img upload time
+        String imageUrl = cloudinaryService.uploadImage(image);
+        event.setBackgroundImageUrl(imageUrl);
+
         Event savedEvent = eventRepository.save(event);
 //        eventProducer.sendEventCreated(eventMapper.toEventUpsertedMessage(event)); I publish the event in the scheduler after checking that it's still pending
         OutboxMessage outboxMessage = OutboxMessage.builder()

@@ -6,11 +6,12 @@ import com.ticketshall.events.dtos.params.PublishEventParams;
 import com.ticketshall.events.models.Event;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.UUID;
 
 public interface EventService {
-    Event createEvent(UpsertEventParams UpsertEventParams);
+    Event createEvent(UpsertEventParams UpsertEventParams, MultipartFile image);
     Event getEvent(UUID id);
     Page<Event> getAllEvents(EventFilterParams eventFilterParams, Pageable pageable);
     void publishEvent(UUID eventId, PublishEventParams publishEventParams);
