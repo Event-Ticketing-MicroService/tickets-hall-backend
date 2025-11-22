@@ -50,30 +50,38 @@ public class EventServiceImpl implements EventService {
         this.jsonUtil = jsonUtil;
         this.cloudinaryService = cloudinaryService;
     }
+
+
     @Override
     @Transactional
     public Event createEvent(UpsertEventParams UpsertEventParams, MultipartFile image) {
-        Optional<Category> category = categoryRepository.findById(UpsertEventParams.getCategoryId());
-        if(category.isEmpty()) throw new NotFoundException("No category found with the given id");
-        Event event = eventMapper.toEvent(UpsertEventParams);
-        event.setCategory(category.get());
+        String imageUrl = "";
+        try {
+            Optional<Category> category = categoryRepository.findById(UpsertEventParams.getCategoryId());
+            if(category.isEmpty()) throw new NotFoundException("No category found with the given id");
+            Event event = eventMapper.toEvent(UpsertEventParams);
+            event.setCategory(category.get());
 
-        // upload and set imageUrl
-        // TODO: This blocks the DB connection for the uploading time, we
-        //  can use TransactionalTemplate to only make a transaction for db writes without the img upload time
-        String imageUrl = cloudinaryService.uploadImage(image);
-        event.setBackgroundImageUrl(imageUrl);
+            // upload and set imageUrl
+            // TODO: This blocks the DB connection for the uploading time, we
+            //  can use TransactionalTemplate to only make a transaction for db writes without the img upload time
+            imageUrl = cloudinaryService.uploadImage(image);
+            event.setBackgroundImageUrl(imageUrl);
 
-        Event savedEvent = eventRepository.save(event);
+            Event savedEvent = eventRepository.save(event);
 //        eventProducer.sendEventCreated(eventMapper.toEventUpsertedMessage(event)); I publish the event in the scheduler after checking that it's still pending
-        OutboxMessage outboxMessage = OutboxMessage.builder()
-                .type(GeneralConstants.EVENT_CREATED_OUTBOX_TYPE)
-                .payload(jsonUtil.toJson(eventMapper.toEventUpsertedMessage(event)))
-                .createdAt(LocalDateTime.now())
-                .processed(false)
-                .build();
-        outboxRepository.save(outboxMessage);
-        return savedEvent;
+            OutboxMessage outboxMessage = OutboxMessage.builder()
+                    .type(GeneralConstants.EVENT_CREATED_OUTBOX_TYPE)
+                    .payload(jsonUtil.toJson(eventMapper.toEventUpsertedMessage(event)))
+                    .createdAt(LocalDateTime.now())
+                    .processed(false)
+                    .build();
+            outboxRepository.save(outboxMessage);
+            return savedEvent;
+        } catch (Exception e) {
+            if(!imageUrl.isEmpty()) cloudinaryService.deleteImage(imageUrl);
+            throw e;
+        }
     }
 
     @Override
@@ -86,6 +94,10 @@ public class EventServiceImpl implements EventService {
         eventMapper.updateEventFromUpsertParams(eventUpdateParams, updatedEvent);
 
         if(!image.isEmpty()) {
+            String oldImageUrl = updatedEvent.getBackgroundImageUrl();
+            if(oldImageUrl != null) {
+                cloudinaryService.deleteImage(oldImageUrl);
+            }
             String imageUrl = cloudinaryService.uploadImage(image);
             updatedEvent.setBackgroundImageUrl(imageUrl);
         }
