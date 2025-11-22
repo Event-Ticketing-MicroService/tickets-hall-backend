@@ -1,5 +1,6 @@
 package com.ticketshall.events.services.impl;
 
+import com.ticketshall.events.constants.GeneralConstants;
 import com.ticketshall.events.dtos.params.CategoryParams;
 import com.ticketshall.events.exceptions.ConflictErrorException;
 import com.ticketshall.events.exceptions.NotFoundException;
@@ -8,10 +9,10 @@ import com.ticketshall.events.models.Category;
 import com.ticketshall.events.repositories.CategoryRepository;
 import com.ticketshall.events.services.CategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -37,6 +38,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    @CacheEvict(value = GeneralConstants.EVENTS_CACHE_NAME, allEntries = true)
     public Category updateCategory(UUID categoryId, CategoryParams categoryParams) {
         Optional<Category> categoryOptional = categoryRepository.findById(categoryId);
         if(categoryOptional.isEmpty()) throw new NotFoundException("category with this id doesn't exist");

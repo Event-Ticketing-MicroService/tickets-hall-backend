@@ -5,6 +5,7 @@ import com.ticketshall.events.dtos.params.UpsertEventParams;
 import com.ticketshall.events.dtos.filterparams.EventFilterParams;
 import com.ticketshall.events.dtos.params.PublishEventParams;
 import com.ticketshall.events.exceptions.ConflictErrorException;
+import com.ticketshall.events.exceptions.GlobalExceptionHandler;
 import com.ticketshall.events.exceptions.NotFoundException;
 import com.ticketshall.events.helpers.JsonUtil;
 import com.ticketshall.events.mappers.EventMapper;
@@ -19,6 +20,8 @@ import com.ticketshall.events.repositories.specifications.EventSpecification;
 import com.ticketshall.events.services.EventService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -37,7 +40,7 @@ public class EventServiceImpl implements EventService {
     private final JsonUtil jsonUtil;
 
     @Autowired
-    public EventServiceImpl(EventRepository eventRepository, EventMapper eventMapper, CategoryRepository categoryRepository, OutboxRepository outboxRepository, JsonUtil jsonUtil) {
+    public EventServiceImpl(EventRepository eventRepository, EventMapper eventMapper, CategoryRepository categoryRepository, OutboxRepository outboxRepository, JsonUtil jsonUtil, GlobalExceptionHandler globalExceptionHandler) {
         this.eventRepository = eventRepository;
         this.eventMapper = eventMapper;
         this.categoryRepository = categoryRepository;
@@ -65,6 +68,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     @Transactional
+    @CacheEvict(value = GeneralConstants.EVENTS_CACHE_NAME, key = "#id")
     public void updateEvent(UUID id, UpsertEventParams eventUpdateParams) {
         Optional<Event> eventOptional = eventRepository.findById(id);
         if(eventOptional.isEmpty()) throw new NotFoundException("Event with given id is not found");
@@ -81,6 +85,7 @@ public class EventServiceImpl implements EventService {
 //        eventProducer.sendEventUpdated(eventMapper.toEventUpsertedMessage(updatedEvent));
     }
 
+    @Cacheable(value = GeneralConstants.EVENTS_CACHE_NAME, key = "#id")
     @Override
     public Event getEvent(UUID id) {
         Optional<Event> event = eventRepository.findByIdWithCategory(id);
@@ -95,6 +100,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @CacheEvict(value = GeneralConstants.EVENTS_CACHE_NAME, key = "#eventId")
     public void publishEvent(UUID eventId, PublishEventParams publishEventParams) {
         Optional<Event> eventOptional = eventRepository.findById(eventId);
         if (eventOptional.isEmpty()) throw new NotFoundException("Event with given id is not found");
