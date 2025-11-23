@@ -20,9 +20,9 @@ public class EventCreatedOutboxScheduler {
     private final OutboxRepository outboxRepository;
     private final EventProducer eventProducer;
 
-    @Scheduled(fixedRate = 2000)
+    @Scheduled(fixedRate = 10000)
     public void sendPendingCreatedEvents() {
-        List<OutboxMessage> messages = outboxRepository.findByProcessedFalseAndType(GeneralConstants.EVENT_CREATED_OUTBOX_TYPE);
+        List<OutboxMessage> messages = outboxRepository.findTop10ByProcessedFalseAndType(GeneralConstants.EVENT_CREATED_OUTBOX_TYPE);
         for (OutboxMessage message : messages) {
             eventProducer.sendEventCreated(jsonUtil.fromJson(message.getPayload(), EventUpsertedMessage.class));
             message.setProcessed(true);
