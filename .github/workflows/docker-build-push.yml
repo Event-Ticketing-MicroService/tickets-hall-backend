@@ -9,7 +9,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_OWNER: ${{ github.repository_owner }}
+  IMAGE_OWNER: event-ticketing-microservice
 
 jobs:
   build-and-push:
@@ -51,12 +51,16 @@ jobs:
         registry: ${{ env.REGISTRY }}
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Convert repository owner to lowercase
+      id: lowercase
+      run: echo "owner=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
 
     - name: Extract metadata for Docker
       id: meta
       uses: docker/metadata-action@v5
       with:
-        images: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/tickets-hall-${{ matrix.service }}
+        images: ${{ env.REGISTRY }}/${{ steps.lowercase.outputs.owner }}/tickets-hall-${{ matrix.service }}
         tags: |
           type=ref,event=branch
           type=ref,event=pr
