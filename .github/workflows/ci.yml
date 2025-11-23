@@ -32,14 +32,6 @@ jobs:
         cd tickets-hall
         mvn -B test --file pom.xml
 
-    - name: Upload build artifacts
-      if: success()
-      uses: actions/upload-artifact@v4
-      with:
-        name: build-artifacts
-        path: tickets-hall/**/target/*.jar
-        retention-days: 7
-
   lint:
     name: Code Quality Check
     runs-on: ubuntu-latest
