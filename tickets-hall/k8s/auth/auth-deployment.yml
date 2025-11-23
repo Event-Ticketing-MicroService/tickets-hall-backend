@@ -17,8 +17,8 @@ spec:
     spec:
       containers:
       - name: auth-service
-        image: auth-service:latest
-        imagePullPolicy: Never
+        image: ghcr.io/event-ticketing-microservice/tickets-hall-auth:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 5000
         env:

@@ -17,8 +17,8 @@ spec:
     spec:
       containers:
       - name: notification-service
-        image: notification-service:latest
-        imagePullPolicy: Never
+        image: ghcr.io/event-ticketing-microservice/tickets-hall-notification:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 5000
         env:
