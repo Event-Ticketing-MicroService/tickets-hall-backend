@@ -19,7 +19,7 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserCredentials implements UserDetails {
+public class UserCredentials {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -38,39 +38,4 @@ public class UserCredentials implements UserDetails {
 
     @Enumerated(EnumType.STRING)
     private UserType userType;
-
-// -------- SPRING SECURITY METHODS --------
-
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        // Convert your role enum (e.g., Role.ADMIN) into a Spring Security authority
-        return List.of(new SimpleGrantedAuthority(role.name()));
-    }
-
-    @Override
-    public String getUsername() {
-        // Since you want to log in using email
-        return email;
-    }
-
-    @Override
-    public boolean isAccountNonExpired() {
-        return true; // can add real logic later if needed
-    }
-
-    @Override
-    public boolean isAccountNonLocked() {
-        return true; // can add real logic later if needed
-    }
-
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return true; // can add real logic later if needed
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return true; // can disable accounts later if needed
-    }
-
 }
