@@ -8,7 +8,7 @@ spring:
     username: postgres
     password: postgres
     driver-class-name: org.postgresql.Driver
-  
+
   # JPA/Hibernate Configuration
   jpa:
     hibernate:
@@ -17,15 +17,15 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-        '[format_sql]': true
-  
+        "[format_sql]": true
+
   # Redis Configuration
   data:
     redis:
       host: localhost
       port: 6379
       timeout: 2000ms
-  
+
   # RabbitMQ Configuration
   rabbitmq:
     host: localhost
@@ -74,5 +74,6 @@ app:
       ticketDeleted: ticket.deleted.queue
       dead-letter: final.dead.letter.queue
 jwt:
-    secret: Y9xk8mVw4pT2orangeZr7NsE1uL0aB5yH8dG4tX2cP9mW1vS6eJ3kQ0rU8zC7nF2
-    expiration: 1h
+  secret: Y9xk8mVw4pT2orangeZr7NsE1uL0aB5yH8dG4tX2cP9mW1vS6eJ3kQ0rU8zC7nF2
+  expiration: 1h
+  refresh-expiration: 30d
