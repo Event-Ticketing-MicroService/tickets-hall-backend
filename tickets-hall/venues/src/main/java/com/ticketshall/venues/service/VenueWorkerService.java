@@ -51,7 +51,6 @@ public class VenueWorkerService {
                 dto-> VenueWorker.builder()
                         .workerEmail(dto.getEmail())
                         .workerName(dto.getFullName())
-                        .username(dto.getUsername())
                         .venue(venue)
                         .build()
         ).toList();
@@ -71,11 +70,10 @@ public class VenueWorkerService {
     }
 
     @Transactional
-    public WorkerResponseDTO patchVenueWorker( WorkerPatchDTO workerPatchDTO) {
+    public WorkerResponseDTO patchVenueWorker(WorkerPatchDTO workerPatchDTO) {
         VenueWorker worker = venueWorkerRepo.findById(workerPatchDTO.getWorkerId()).orElseThrow(() -> new IllegalArgumentException("Worker not found"));
         if(workerPatchDTO.getEmail() != null)  worker.setWorkerEmail(workerPatchDTO.getEmail());
         if(workerPatchDTO.getFullName() != null)  worker.setWorkerName(workerPatchDTO.getFullName());
-        if(workerPatchDTO.getUsername() != null)  worker.setUsername(workerPatchDTO.getUsername());
 
         venueWorkerRepo.save(worker);
         return DTOMapper.toWorkerResponseDTO(worker);

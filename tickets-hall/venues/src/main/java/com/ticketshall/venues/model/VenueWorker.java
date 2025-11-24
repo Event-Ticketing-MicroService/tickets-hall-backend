@@ -21,9 +21,6 @@ public class VenueWorker {
     @Column(nullable = false)
     private String workerEmail;
 
-    @Column(nullable = false)
-    private String username;
-
     @ManyToOne
     @JoinColumn(name = "venue_id", nullable = false)
     private Venue venue;
