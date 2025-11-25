@@ -1,42 +1,48 @@
 package com.ticketshall.venues.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import org.antlr.v4.runtime.misc.NotNull;
+import jakarta.persistence.*;
+import lombok.*;
 
-import java.util.UUID;
+import java.util.*;
 
 @Entity
+@Getter
+@Setter
+@NoArgsConstructor
+@Builder
+@AllArgsConstructor
 public class Venue {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private UUID venueID;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long venueID;
 
-    @NotNull
+    @Column(nullable = false)
     private String venueName;
 
-
+    @Column(nullable = false)
     private String venueAddress;
 
-
+    @Column(nullable = false)
     private String venuePhone;
 
+    @Column(nullable = false)
+    private String venueEmail;
 
-    private String venuePassword;
-
-
+    @Column(nullable = false)
     private int venueCapacity;
 
-
+    @Column(nullable = false)
     private String venueDescription;
 
-
+    @Column(nullable = false)
     private String venueCountry;
 
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "image_id")
+    private VenueImage venueImage;
 
-    private String venueState;
+    @OneToMany(mappedBy = "venue", cascade = CascadeType.ALL)
+    private List<VenueWorker> workers = new ArrayList<>();
 
 }

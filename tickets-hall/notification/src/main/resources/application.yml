@@ -1,0 +1,76 @@
+spring:
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/notifications
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+
+  # JPA/Hibernate Configuration
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        '[format_sql]': true
+  mail:
+    host: localhost
+    port: 25
+    username: ""
+    password: ""
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: admin
+    password: admin
+    listener:
+      simple:
+        retry:
+          enabled: true
+          initial-interval: 2000ms
+          max-attempts: 5
+          max-interval: 10000ms
+          multiplier: 2.0
+        default-requeue-rejected: false
+        acknowledge-mode: auto
+
+server:
+  port: 6969
+
+app:
+  rabbitmq:
+    exchanges:
+      user: user.exchange
+      event: event.exchange
+      ticket: ticket.exchange
+      dead-letter: deadLetter.exchange
+    routing:
+      userCreated: user.created
+      userUpdated: user.updated
+      userDeleted: user.deleted
+      eventCreated: event.created
+      eventUpdated: event.updated
+      eventDeleted: event.deleted
+      ticketCreated: ticket.created
+      ticketUpdated: ticket.updated
+      ticketDeleted: ticket.deleted
+      dead-letter: notification.dead.letter
+    queues:
+      userCreated: notification.user.created.queue
+      userUpdated: notification.user.updated.queue
+      userDeleted: notification.user.deleted.queue
+      eventCreated: notification.event.created.queue
+      eventUpdated: notification.event.updated.queue
+      eventDeleted: notification.event.deleted.queue
+      ticketCreated: notification.ticket.created.queue
+      ticketUpdated: notification.ticket.updated.queue
+      ticketDeleted: notification.ticket.deleted.queue
+      dead-letter: notification.final.dead.letter.queue

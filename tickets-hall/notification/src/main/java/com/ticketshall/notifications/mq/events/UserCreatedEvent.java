@@ -1,0 +1,7 @@
+package com.ticketshall.notifications.mq.events;
+
+import java.util.UUID;
+
+public record UserCreatedEvent(UUID id, String firstName, String lastName, String email) {
+
+}

@@ -1,0 +1,7 @@
+package com.ticketshall.tickets.mq.events;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+public record EventUpdatedEvent(UUID id, String title, String description, String location, LocalDateTime startsAtUtc, LocalDateTime endsAtUtc) {
+}

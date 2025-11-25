@@ -5,19 +5,20 @@ FROM maven:3.9-eclipse-temurin-17 AS build
 # Set working directory
 WORKDIR /app
 
-# Copy parent pom.xml first for better caching
+# Copy parent pom.xml
 COPY pom.xml ./pom.xml
 
-# Copy venues module pom.xml
+# Copy tickets module pom.xml
 COPY venues/pom.xml ./venues/pom.xml
 
 # Copy source code
 COPY venues/src ./venues/src
+
 # Build the application
 RUN cd venues && mvn clean package -DskipTests
 
 # Stage 2: Runtime
-FROM openjdk:17-jdk-slim
+FROM eclipse-temurin:17-jre-alpine
 
 # Set working directory
 WORKDIR /app

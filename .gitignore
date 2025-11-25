@@ -48,3 +48,8 @@ requirements.txt
 *.ps1
 
 .venv
+
+*.toml
+mise.toml
+
+test*.yml

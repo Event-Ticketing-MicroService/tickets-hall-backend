@@ -1,0 +1,35 @@
+
+spring:
+  # Database Configuration
+  datasource:
+    url: jdbc:postgresql://localhost:5432/payment
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+
+  # JPA/Hibernate Configuration
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        '[format_sql]': true
+
+stripe:
+  secret:
+    key: sk_test_51SHjrT3QPFFIs9vxhkozjU217GhieTJ7lZ5bHKhlQTWn5kacsMjZ0MbCNwONxiyTwn1j5vW5YiuZxHxQaKoWPzZQ00fs3xI7qO
+  webhook:
+    secret: WEBHOOK-SECRET
+# Application-specific RabbitMQ Configuration
+app:
+  rabbitmq:
+    exchanges:
+      payment: ticket.exchange
+    routing:
+      paymentSucceeded: payment.succeeded
+      paymentFailed: payment.failed
+
+server:
+  port: 8001

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-venues
+  namespace: tickets-hall
+  labels:
+    app: postgres-venues
+spec:
+  selector:
+    app: postgres-venues
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432
+  type: ClusterIP
