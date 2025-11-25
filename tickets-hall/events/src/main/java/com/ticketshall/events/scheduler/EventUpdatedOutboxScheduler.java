@@ -18,9 +18,9 @@ public class EventUpdatedOutboxScheduler {
     private final OutboxRepository outboxRepository;
     private final EventProducer eventProducer;
 
-    @Scheduled(fixedRate = 2000)
+    @Scheduled(fixedRate = 10000)
     public void sendPendingUpdatedEvents() {
-        List<OutboxMessage> messages = outboxRepository.findByProcessedFalseAndType(GeneralConstants.EVENT_UPDATED_OUTBOX_TYPE);
+        List<OutboxMessage> messages = outboxRepository.findTop10ByProcessedFalseAndType(GeneralConstants.EVENT_UPDATED_OUTBOX_TYPE);
         for (OutboxMessage message : messages) {
             eventProducer.sendEventUpdated(jsonUtil.fromJson(message.getPayload(), EventUpsertedMessage.class));
             message.setProcessed(true);

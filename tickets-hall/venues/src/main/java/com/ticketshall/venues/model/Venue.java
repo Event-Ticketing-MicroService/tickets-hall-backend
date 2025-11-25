@@ -2,11 +2,8 @@ package com.ticketshall.venues.model;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.antlr.v4.runtime.misc.NotNull;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Entity
 @Getter
@@ -41,8 +38,9 @@ public class Venue {
     @Column(nullable = false)
     private String venueCountry;
 
-    @OneToMany(mappedBy = "venue", cascade = CascadeType.ALL)
-    private List<VenueImage> venueImages = new ArrayList<>();
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "image_id")
+    private VenueImage venueImage;
 
     @OneToMany(mappedBy = "venue", cascade = CascadeType.ALL)
     private List<VenueWorker> workers = new ArrayList<>();

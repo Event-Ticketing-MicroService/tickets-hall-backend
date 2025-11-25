@@ -15,11 +15,14 @@ import java.util.UUID;
 @AllArgsConstructor
 public class VenueImage {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY )
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long venueImageID;
 
     @NotNull
     private String imageURL;
+
+    @NotNull
+    private String publicId;
 
     @ManyToOne
     @JoinColumn(name = "venue_id")

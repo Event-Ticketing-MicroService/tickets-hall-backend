@@ -1,10 +1,6 @@
 package com.ticketshall.venues.DTO.venueDTOS;
 
-
-import com.ticketshall.venues.DTO.venueImgDTOS.VenueImageRequestDTO;
 import com.ticketshall.venues.DTO.venueWorkerDTOS.WorkerRequestDTO;
-import com.ticketshall.venues.model.VenueImage;
-import com.ticketshall.venues.model.VenueWorker;
 import jakarta.validation.constraints.*;
 
 import lombok.AllArgsConstructor;
@@ -46,11 +42,6 @@ public class VenueRequestDTO {
     @NotBlank(message = "Country is required")
     private String venueCountry;
 
-    @Size(min = 1, message = "At least one image URL is required")
-    private List<VenueImageRequestDTO> venueImages;
-
     @Size(min = 1, message = "At least one worker is required")
     private List<WorkerRequestDTO> venueWorkers;
-
-
 }

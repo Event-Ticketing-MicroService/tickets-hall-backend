@@ -3,19 +3,18 @@ package com.ticketshall.venues.controller;
 import com.ticketshall.venues.DTO.venueDTOS.VenueRequestDTO;
 import com.ticketshall.venues.DTO.venueDTOS.VenueResponseDTO;
 import com.ticketshall.venues.DTO.venueDTOS.VenuePatchDTO;
-import com.ticketshall.venues.DTO.venueImgDTOS.VenueImageRequestDTO;
-import com.ticketshall.venues.DTO.venueImgDTOS.VenueImageResponseDTO;
 import com.ticketshall.venues.DTO.venueWorkerDTOS.WorkerPatchDTO;
 import com.ticketshall.venues.DTO.venueWorkerDTOS.WorkerRequestDTO;
 import com.ticketshall.venues.DTO.venueWorkerDTOS.WorkerResponseDTO;
-import com.ticketshall.venues.service.VenueImgService;
 import com.ticketshall.venues.service.VenueService;
 import com.ticketshall.venues.service.VenueWorkerService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
@@ -25,7 +24,6 @@ import java.util.Optional;
 @RequestMapping("/api/venues")
 public class VenueController {
     private final VenueService venueService;
-    private final VenueImgService venueImgService;
     private final VenueWorkerService venueWorkerService;
 
     @Operation(summary = "Get all venues")
@@ -41,15 +39,21 @@ public class VenueController {
     }
 
     @Operation(summary = "Create a Venue")
-    @PostMapping
-    public ResponseEntity<VenueResponseDTO> createVenue(@RequestBody @Validated VenueRequestDTO venueRequestDTO){
-        return ResponseEntity.ok().body(venueService.createVenue(venueRequestDTO));
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<VenueResponseDTO> createVenue(
+            @RequestPart("data") @Validated VenueRequestDTO venueRequestDTO,
+            @RequestPart("image") MultipartFile image
+    ){
+        return ResponseEntity.ok(venueService.createVenue(venueRequestDTO, image));
     }
 
     @Operation(summary = "Updated a Venue")
-    @PatchMapping("/{id}")
-    public ResponseEntity<VenueResponseDTO> updateVenue(@PathVariable Long id,@Validated @RequestBody VenuePatchDTO venueRequestDTO){
-        return ResponseEntity.ok().body(venueService.updateVenue(venueRequestDTO,id));
+    @PatchMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<VenueResponseDTO> updateVenue(
+            @PathVariable Long id,
+            @Validated @RequestPart("data") VenuePatchDTO venueRequestDTO,
+            @RequestPart("image") MultipartFile image){
+        return ResponseEntity.ok().body(venueService.updateVenue(venueRequestDTO, id, image));
     }
 
     @Operation(summary = "Deleted a Venue")
@@ -57,26 +61,6 @@ public class VenueController {
     public ResponseEntity<Void> deleteVenue(@PathVariable Long id){
         if (venueService.getVenueById(id).isEmpty())throw new RuntimeException("Venue not found");
         venueService.deleteVenue(id);
-        return ResponseEntity.noContent().build();
-    }
-
-    @Operation(summary = "Get all venue images")
-    @GetMapping("/{id}/images")
-    public ResponseEntity<List<VenueImageResponseDTO>> getAllVenueImages(@PathVariable Long id){
-        return ResponseEntity.ok().body(venueImgService.getAllVenueImages(id));
-    }
-
-    @Operation(summary = "Added images to a Venue")
-    @PatchMapping("/{id}/images")
-    public ResponseEntity<List<VenueImageResponseDTO>> addPhotos(@PathVariable Long id, @RequestBody @Validated List<VenueImageRequestDTO> imageRequestDTO){
-        return ResponseEntity.ok().body(venueImgService.addImagesToVenue(id, imageRequestDTO));
-    }
-
-    //URL ID is the venue id, Img ID to be deleted should be included in the json request body
-    @Operation(summary = "Deleted images from a Venue")
-    @DeleteMapping("/{id}/images")
-    public ResponseEntity<Void> deletePhotos(@PathVariable Long id , @RequestBody List<Long> imageIdsToDelete){
-        venueImgService.deleteVenueImages(imageIdsToDelete);
         return ResponseEntity.noContent().build();
     }
 
