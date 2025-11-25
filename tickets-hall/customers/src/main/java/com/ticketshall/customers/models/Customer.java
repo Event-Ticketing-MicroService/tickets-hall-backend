@@ -1,4 +1,4 @@
-package com.ticketshall.customers;
+package com.ticketshall.customers.models;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -29,7 +29,6 @@ public class Customer {
     private String address;
     private String city;
     private String country;
-    private String imageUrl;
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
     @Column(name = "updated_at")

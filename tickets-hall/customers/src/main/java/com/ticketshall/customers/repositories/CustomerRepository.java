@@ -1,4 +1,5 @@
-package com.ticketshall.customers;
+package com.ticketshall.customers.repositories;
+import com.ticketshall.customers.models.Customer;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
