@@ -1,11 +1,13 @@
 package com.ticketshall.auth.controller;
 
 import com.ticketshall.auth.DTO.LoginRequestDTO;
+import com.ticketshall.auth.DTO.RefreshResponseDTO;
 import com.ticketshall.auth.Enums.Role;
 import com.ticketshall.auth.Enums.UserType;
 import com.ticketshall.auth.config.JwtUtil;
 import com.ticketshall.auth.model.UserCredentials;
 import com.ticketshall.auth.repository.UserCredentialsRepo;
+import com.ticketshall.auth.service.AuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -17,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -39,6 +42,9 @@ class AuthControllerTest {
     @InjectMocks
     private AuthController authController;
 
+    @Mock
+    private AuthService authService;
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
@@ -57,20 +63,17 @@ class AuthControllerTest {
         Authentication authentication = mock(Authentication.class);
         when(authentication.getPrincipal()).thenReturn(user);
         when(authenticationManager.authenticate(any())).thenReturn(authentication);
-        when(jwtUtil.generateToken(any(), any())).thenReturn("access-token");
+        when(jwtUtil.generateToken(any(), any(), any())).thenReturn("access-token");
         when(jwtUtil.generateRefreshToken(any())).thenReturn("refresh-token");
 
         ResponseEntity<Object> response = authController.login(request);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
 
-        // Verify Refresh Token Cookie
         assertNotNull(response.getHeaders().get(HttpHeaders.SET_COOKIE));
         assertTrue(response.getHeaders().get(HttpHeaders.SET_COOKIE).toString().contains("refreshToken=refresh-token"));
         assertFalse(response.getHeaders().get(HttpHeaders.SET_COOKIE).toString().contains("accessToken=access-token"));
 
-        // Verify Access Token in Body
-        @SuppressWarnings("unchecked")
         Map<String, Object> body = (Map<String, Object>) response.getBody();
         assertNotNull(body);
         assertEquals("access-token", body.get("accessToken"));
@@ -108,34 +111,31 @@ class AuthControllerTest {
     @Test
     void testRefreshTokenEndpoint() {
         String refreshToken = "valid-refresh-token";
-        UUID userId = UUID.randomUUID();
-        UserCredentials user = UserCredentials.builder()
-                .userId(userId)
-                .role(Role.USER)
-                .build();
 
-        when(jwtUtil.validateRefreshToken(refreshToken)).thenReturn(true);
-        when(jwtUtil.extractUserId(refreshToken)).thenReturn(userId.toString());
-        when(userCredentialsRepo.findById(userId)).thenReturn(Optional.of(user));
-        when(jwtUtil.generateToken(Role.USER, userId)).thenReturn("new-access-token");
+        Map<String, String> requestBody = new HashMap<>();
+        requestBody.put("refreshToken", refreshToken);
 
-        ResponseEntity<Object> response = authController.refreshToken(refreshToken);
+        RefreshResponseDTO expectedResponse =
+                new RefreshResponseDTO("new-access-token", "new-refresh-token");
+
+        when(authService.refreshToken(refreshToken)).thenReturn(expectedResponse);
+
+        ResponseEntity<RefreshResponseDTO> response = authController.refreshToken(requestBody);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-
-        @SuppressWarnings("unchecked")
-        Map<String, Object> body = (Map<String, Object>) response.getBody();
-        assertNotNull(body);
-        assertEquals("new-access-token", body.get("accessToken"));
+        assertEquals("new-access-token", response.getBody().token());
     }
+
 
     @Test
     void testRefreshTokenEndpointWithInvalidToken() {
         String refreshToken = "invalid-refresh-token";
 
-        when(jwtUtil.validateRefreshToken(refreshToken)).thenReturn(false);
+        when(authService.refreshToken(refreshToken))
+                .thenThrow(new RuntimeException("Invalid refresh token"));
 
-        ResponseEntity<Object> response = authController.refreshToken(refreshToken);
+        ResponseEntity<RefreshResponseDTO> response =
+                authController.refreshToken(Map.of("refreshToken", refreshToken));
 
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
     }

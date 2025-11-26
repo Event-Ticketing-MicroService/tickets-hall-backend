@@ -7,7 +7,6 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
-import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.UUID;
 import java.security.Key;
@@ -15,8 +14,6 @@ import java.util.function.Function;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-
-import static javax.crypto.Cipher.SECRET_KEY;
 
 @Component
 public class JwtUtil {
@@ -44,17 +41,6 @@ public class JwtUtil {
 
     public String generateRefreshToken(UUID userId) {
         long expiration = jwtConfig.getRefreshTokenExpiration().toMillis();
-
-        return Jwts.builder()
-                .subject(userId.toString())
-                .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + expiration))
-                .signWith(key)
-                .compact();
-    }
-
-    public String generateRefreshToken(UUID userId) {
-        long expiration = jwtConfig.getRefreshExpiration().toMillis();
         return Jwts.builder()
                 .subject(userId.toString())
                 .claim("type", "refresh")
@@ -110,6 +96,23 @@ public class JwtUtil {
             boolean notExpired = !isTokenExpired(token);
             return emailMatches && notExpired;
         } catch (JwtException | IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    public boolean validateRefreshToken(String token) {
+        if (!validateToken(token)) {
+            return false;
+        }
+        try {
+            String type = Jwts.parser()
+                    .verifyWith((SecretKey) key)
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload()
+                    .get("type", String.class);
+            return "refresh".equals(type);
+        } catch (Exception e) {
             return false;
         }
     }
