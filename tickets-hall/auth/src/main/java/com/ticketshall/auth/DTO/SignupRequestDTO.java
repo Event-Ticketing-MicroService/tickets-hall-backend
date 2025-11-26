@@ -13,12 +13,12 @@ public record SignupRequestDTO(
         String email,
         @ValidPassword
         String password,
-        @NotBlank(message = "User type is required")
-        @Pattern(regexp = "^(CUSTOMER|VENUE)$", message = "User type must be CUSTOMER or VENUE")
+        @jakarta.validation.constraints.NotNull(message = "User type is required")
         UserType userType,
         @Valid
         VenueRequestDTO venueDetails,
         @Valid
         CreateCustomerDTO customerDetails
-) {
+        ) {
+
 }
