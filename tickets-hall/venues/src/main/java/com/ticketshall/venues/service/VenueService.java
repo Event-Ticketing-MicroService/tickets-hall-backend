@@ -6,16 +6,13 @@ import com.ticketshall.venues.DTO.venueDTOS.VenueResponseDTO;
 import com.ticketshall.venues.DTO.venueDTOS.VenuePatchDTO;
 import com.ticketshall.venues.model.Venue;
 import com.ticketshall.venues.model.VenueImage;
-import com.ticketshall.venues.repository.VenueImgRepo;
 import com.ticketshall.venues.repository.VenueRepo;
-import com.ticketshall.venues.repository.VenueWorkerRepo;
 import com.ticketshall.venues.service.impl.CloudinaryService;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -24,9 +21,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class VenueService {
     private final VenueRepo venueRepo;
-    private final VenueImgRepo venueImgRepo;
     private final CloudinaryService cloudinaryService;
-    private final VenueWorkerRepo venueWorkerRepo;
 
     @Transactional(readOnly = true)
     public List<VenueResponseDTO> getAllVenues() {

@@ -30,7 +30,7 @@ public class Venue {
     private String venueEmail;
 
     @Column(nullable = false)
-    private int venueCapacity;
+    private Integer venueCapacity;
 
     @Column(nullable = false)
     private String venueDescription;

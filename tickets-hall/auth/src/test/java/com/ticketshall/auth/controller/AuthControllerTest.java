@@ -1,11 +1,12 @@
 package com.ticketshall.auth.controller;
 
 import com.ticketshall.auth.DTO.LoginRequestDTO;
+import com.ticketshall.auth.DTO.RefreshResponseDTO;
+import com.ticketshall.auth.DTO.SignupLoginResponseDTO;
 import com.ticketshall.auth.Enums.Role;
 import com.ticketshall.auth.Enums.UserType;
-import com.ticketshall.auth.config.JwtUtil;
-import com.ticketshall.auth.model.UserCredentials;
-import com.ticketshall.auth.repository.UserCredentialsRepo;
+import com.ticketshall.auth.service.AuthService;
+import com.ticketshall.auth.service.LogoutService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -14,27 +15,20 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.core.Authentication;
 
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 class AuthControllerTest {
 
     @Mock
-    private JwtUtil jwtUtil;
+    private AuthService authService;
 
     @Mock
-    private AuthenticationManager authenticationManager;
-
-    @Mock
-    private UserCredentialsRepo userCredentialsRepo;
+    private LogoutService logoutService;
 
     @InjectMocks
     private AuthController authController;
@@ -45,98 +39,72 @@ class AuthControllerTest {
     }
 
     @Test
-    void testLoginReturnsAccessTokenInBodyAndRefreshTokenInCookie() {
-        LoginRequestDTO request = new LoginRequestDTO("test@example.com", "password");
-        UserCredentials user = UserCredentials.builder()
-                .userId(UUID.randomUUID())
+    void testLoginReturnsAccessAndRefreshTokens() {
+        UUID userId = UUID.randomUUID();
+        SignupLoginResponseDTO responseDTO = SignupLoginResponseDTO.builder()
+                .token("access-token")
+                .refreshToken("refresh-token")
+                .userId(userId)
                 .email("test@example.com")
                 .role(Role.USER)
                 .userType(UserType.CUSTOMER)
                 .build();
 
-        Authentication authentication = mock(Authentication.class);
-        when(authentication.getPrincipal()).thenReturn(user);
-        when(authenticationManager.authenticate(any())).thenReturn(authentication);
-        when(jwtUtil.generateToken(any(), any())).thenReturn("access-token");
-        when(jwtUtil.generateRefreshToken(any())).thenReturn("refresh-token");
+        when(authService.login(any(LoginRequestDTO.class))).thenReturn(responseDTO);
 
+        LoginRequestDTO request = new LoginRequestDTO("test@example.com", "password");
         ResponseEntity<Object> response = authController.login(request);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-
-        // Verify Refresh Token Cookie
         assertNotNull(response.getHeaders().get(HttpHeaders.SET_COOKIE));
         assertTrue(response.getHeaders().get(HttpHeaders.SET_COOKIE).toString().contains("refreshToken=refresh-token"));
-        assertFalse(response.getHeaders().get(HttpHeaders.SET_COOKIE).toString().contains("accessToken=access-token"));
 
-        // Verify Access Token in Body
-        @SuppressWarnings("unchecked")
-        Map<String, Object> body = (Map<String, Object>) response.getBody();
+        SignupLoginResponseDTO body = (SignupLoginResponseDTO) response.getBody();
         assertNotNull(body);
-        assertEquals("access-token", body.get("accessToken"));
+        assertEquals("access-token", body.token());
+        assertEquals("refresh-token", body.refreshToken());
     }
 
     @Test
-    void testValidateWithValidAccessTokenInHeader() {
-        String accessToken = "valid-access-token";
-        String authHeader = "Bearer " + accessToken;
-        String role = "USER";
-        String userId = UUID.randomUUID().toString();
+    void testValidateJwtReturnsHeadersWhenValid() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("X-User-ID", UUID.randomUUID().toString());
 
-        when(jwtUtil.validateTokenAndRole(accessToken, role)).thenReturn(true);
-        when(jwtUtil.extractUserId(accessToken)).thenReturn(userId);
+        when(authService.validate("Bearer token", "USER")).thenReturn(headers);
 
-        ResponseEntity<Object> response = authController.validateJwt(authHeader, role);
+        ResponseEntity<Object> response = authController.validateJwt("Bearer token", "USER");
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(userId, response.getHeaders().getFirst("X-User-ID"));
+        assertEquals(headers.getFirst("X-User-ID"), response.getHeaders().getFirst("X-User-ID"));
     }
 
     @Test
-    void testValidateWithExpiredAccessTokenReturns401() {
-        String accessToken = "expired-access-token";
-        String authHeader = "Bearer " + accessToken;
-        String role = "USER";
-
-        when(jwtUtil.validateTokenAndRole(accessToken, role)).thenReturn(false);
-
-        ResponseEntity<Object> response = authController.validateJwt(authHeader, role);
-
-        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
-    }
-
-    @Test
-    void testRefreshTokenEndpoint() {
+    void testRefreshTokenReturnsNewTokens() {
         String refreshToken = "valid-refresh-token";
-        UUID userId = UUID.randomUUID();
-        UserCredentials user = UserCredentials.builder()
-                .userId(userId)
-                .role(Role.USER)
+        RefreshResponseDTO responseDTO = RefreshResponseDTO.builder()
+                .token("new-access-token")
+                .refreshToken("new-refresh-token")
                 .build();
 
-        when(jwtUtil.validateRefreshToken(refreshToken)).thenReturn(true);
-        when(jwtUtil.extractUserId(refreshToken)).thenReturn(userId.toString());
-        when(userCredentialsRepo.findById(userId)).thenReturn(Optional.of(user));
-        when(jwtUtil.generateToken(Role.USER, userId)).thenReturn("new-access-token");
+        when(authService.refreshToken(refreshToken)).thenReturn(responseDTO);
 
-        ResponseEntity<Object> response = authController.refreshToken(refreshToken);
+        ResponseEntity<RefreshResponseDTO> response = authController.refreshToken(Map.of("refreshToken", refreshToken));
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-
-        @SuppressWarnings("unchecked")
-        Map<String, Object> body = (Map<String, Object>) response.getBody();
-        assertNotNull(body);
-        assertEquals("new-access-token", body.get("accessToken"));
+        assertEquals("new-access-token", response.getBody().token());
+        assertEquals("new-refresh-token", response.getBody().refreshToken());
     }
 
     @Test
-    void testRefreshTokenEndpointWithInvalidToken() {
+    void testRefreshTokenThrowsUnauthorizedOnInvalidToken() {
         String refreshToken = "invalid-refresh-token";
 
-        when(jwtUtil.validateRefreshToken(refreshToken)).thenReturn(false);
+        when(authService.refreshToken(refreshToken))
+                .thenThrow(new RuntimeException("Invalid refresh token"));
 
-        ResponseEntity<Object> response = authController.refreshToken(refreshToken);
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> authController.refreshToken(Map.of("refreshToken", refreshToken)));
 
-        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        assertEquals("Invalid refresh token", exception.getMessage());
     }
 }

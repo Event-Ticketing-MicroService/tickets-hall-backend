@@ -34,7 +34,7 @@ public class VenueRequestDTO {
     private String password;
 
     @Positive(message = "Capacity must be greater than 0")
-    private int venueCapacity;
+    private Integer venueCapacity;
 
     @NotBlank(message = "Description is required")
     private String venueDescription;
