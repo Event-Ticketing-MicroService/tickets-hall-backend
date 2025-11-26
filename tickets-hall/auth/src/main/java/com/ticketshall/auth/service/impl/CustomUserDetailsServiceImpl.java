@@ -1,5 +1,6 @@
 package com.ticketshall.auth.service.impl;
 
+import com.ticketshall.auth.model.UserCredentials;
 import com.ticketshall.auth.repository.UserCredentialsRepo;
 import com.ticketshall.auth.security.SecurityUser;
 import com.ticketshall.auth.service.CustomUserDetailsService;
@@ -16,8 +17,7 @@ public class CustomUserDetailsServiceImpl implements UserDetailsService, CustomU
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        var user = userCredentialsRepo.findByEmail(email);
-        return user.map(SecurityUser::new)
-                .orElseThrow(() -> new UsernameNotFoundException("user with email " + email + " not found"));
+        return userCredentialsRepo.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("user with this email "+email+" not found"));
     }
+
 }

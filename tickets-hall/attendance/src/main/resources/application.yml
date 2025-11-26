@@ -1,5 +1,5 @@
 server:
-  port: 5000
+  port: 5001
 
 spring:
   lifecycle:
@@ -78,7 +78,7 @@ app:
 
 management:
   server:
-    port: 1234
+    port: 1224
   endpoints:
     web:
       exposure:

@@ -4,7 +4,7 @@ server:
 spring:
   # Database Configuration
   datasource:
-    url: jdbc:postgresql://localhost:5432/auth
+    url: jdbc:postgresql://localhost:5440/auth
     username: postgres
     password: postgres
     driver-class-name: org.postgresql.Driver
@@ -26,27 +26,6 @@ spring:
       port: 6379
       timeout: 2000ms
 
-jwt:
-    secret: Y9xk8mVw4pT2orangeZr7NsE1uL0aB5yH8dG4tX2cP9mW1vS6eJ3kQ0rU8zC7nF2
-    access-token-expiration: 15m
-    refresh-token-expiration: 7d
-
-resilience4j:
-  retry:
-    instances:
-      venueServiceRetry:
-        max-attempts: 3
-        wait-duration: 500ms
-        retry-exceptions:
-          - com.ticketshall.auth.exceptions_handlers.ExternalServiceException
-          - feign.RetryableException
-      customerServiceRetry:
-        max-attempts: 3
-        wait-duration: 500ms
-        retry-exceptions:
-          - com.ticketshall.auth.exceptions_handlers.ExternalServiceException
-          - feign.RetryableException
-
   # RabbitMQ Configuration
   rabbitmq:
     host: localhost
@@ -64,6 +43,27 @@ resilience4j:
         default-requeue-rejected: false
         acknowledge-mode: auto
 
+jwt:
+    secret: Y9xk8mVw4pT2orangeZr7NsE1uL0aB5yH8dG4tX2cP9mW1vS6eJ3kQ0rU8zC7nF2
+    access-token-expiration: 86400000
+    refresh-token-expiration: 604800000
+
+resilience4j:
+  retry:
+    instances:
+      venueServiceRetry:
+        max-attempts: 3
+        wait-duration: 500ms
+        retry-exceptions:
+          - com.ticketshall.auth.exceptions_handlers.ExternalServiceException
+          - feign.RetryableException
+      customerServiceRetry:
+        max-attempts: 3
+        wait-duration: 500ms
+        retry-exceptions:
+          - com.ticketshall.auth.exceptions_handlers.ExternalServiceException
+          - feign.RetryableException
+
 # Application-specific RabbitMQ Configuration
 app:
   rabbitmq:
@@ -74,10 +74,12 @@ app:
       workerCreated: worker.created
       workerUpdated: worker.updated
       workerDeleted: worker.deleted
+      dead-letter: worker.dead.letter
     queues:
       workerCreated: auth.worker.created.queue
       workerUpdated: auth.worker.updated.queue
       workerDeleted: auth.worker.deleted.queue
+      dead-letter: auth.final.dead.letter.queue
 
 management:
   server:

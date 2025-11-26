@@ -7,6 +7,7 @@ import com.ticketshall.auth.service.AuthService;
 import com.ticketshall.auth.service.LogoutService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseCookie;
@@ -27,6 +28,7 @@ import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
+@Slf4j
 public class AuthController {
     private final AuthService authService;
     private final LogoutService logoutService;
@@ -41,15 +43,22 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<Object> login(@Valid @RequestBody LoginRequestDTO request) {
-        SignupLoginResponseDTO result = authService.login(request);
-        ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", result.refreshToken())
-                .httpOnly(true)
-                .secure(false)
-                .path("/")
-                .maxAge(Duration.ofDays(30))
-                .build();
-        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
-                .body(result);
+        try {
+            log.info("login request: {}", request.email());
+            SignupLoginResponseDTO result = authService.login(request);
+            log.info("login result: {}", result.userType());
+            ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", result.refreshToken())
+                    .httpOnly(true)
+                    .secure(false)
+                    .path("/")
+                    .maxAge(Duration.ofDays(30))
+                    .build();
+            return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+                    .body(result);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            throw e;
+        }
     }
 
     @PostMapping(value = "/signup", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
