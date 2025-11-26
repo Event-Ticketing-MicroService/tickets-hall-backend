@@ -74,6 +74,7 @@ app:
       workerCreated: worker.created
       workerUpdated: worker.updated
       workerDeleted: worker.deleted
+      dead-letter: auth.dead.letter
     queues:
       workerCreated: auth.worker.created.queue
       workerUpdated: auth.worker.updated.queue
