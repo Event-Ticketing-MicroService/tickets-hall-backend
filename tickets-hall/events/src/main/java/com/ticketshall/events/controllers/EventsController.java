@@ -26,24 +26,22 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.UUID;
 
-
-@RequestMapping("/events")
 @RestController
 public class EventsController {
+
     private final EventService eventService;
     private final EventMapper eventMapper;
 
     @Autowired
     public EventsController(EventService eventService,
-                            EventMapper eventMapper) {
+            EventMapper eventMapper) {
         this.eventService = eventService;
         this.eventMapper = eventMapper;
     }
 
-
-    @PostMapping(value = "", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    ResponseEntity<?> createEvent(@Valid  UpsertEventParams UpsertEventParams,
-                                  @RequestPart("image") MultipartFile image) {
+    @PostMapping(value = "/admin", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    ResponseEntity<?> createEvent(@Valid UpsertEventParams UpsertEventParams,
+            @RequestPart("image") MultipartFile image) {
         EventValidator eventValidator = new EventValidator(UpsertEventParams);
         ImageValidator imageValidator = new ImageValidator(image, false);
         eventValidator.validate();
@@ -61,12 +59,10 @@ public class EventsController {
         return ResponseEntity.ok().body(eventMapper.toEventDTO(event));
     }
 
-
     @GetMapping("")
     ResponseEntity<?> getAllEvents(
             EventFilterParams eventFilterParams,
-            @PageableDefault(size = 10, page = 0, sort = "startsAt", direction = Sort.Direction.DESC)
-            Pageable pageable
+            @PageableDefault(size = 10, page = 0, sort = "startsAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         Page<Event> eventsPage = eventService.getAllEvents(eventFilterParams, pageable);
         Page<EventDTO> eventDTOS = eventsPage.map(eventMapper::toEventDTO);
@@ -74,7 +70,7 @@ public class EventsController {
     }
 
     // TODO: publish event
-    @PatchMapping("/{id}/publish")
+    @PatchMapping("/admin/{id}/publish")
     ResponseEntity<?> publishEvent(
             @PathVariable UUID id,
             @RequestBody PublishEventParams publishEventParams
@@ -84,8 +80,7 @@ public class EventsController {
     }
 
     // TODO: update event
-
-    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PutMapping(value = "/admin/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     ResponseEntity<?> updateEvent(@PathVariable UUID id, @Valid UpsertEventParams upsertEventParams, @RequestPart("image") MultipartFile image) {
         EventValidator eventValidator = new EventValidator(upsertEventParams);
         ImageValidator imageValidator = new ImageValidator(image, true);

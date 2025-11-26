@@ -15,10 +15,38 @@ spec:
     - host: tickets-hall.local
       http:
         paths:
-          - path: /service-name(/|$)(.*)
+          - path: /customers(/?)(admin.*)
             pathType: ImplementationSpecific
             backend:
               service:
-                name: service-label
+                name: customers-service
+                port:
+                  number: 80
+          - path: /events(/?)(admin.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: events-service
+                port:
+                  number: 80
+          - path: /categories(/?)(admin.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: events-service
+                port:
+                  number: 80
+          - path: /ticket-types(/?)(admin.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: tickets-service
+                port:
+                  number: 80
+          - path: /venues(/?)(admin.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: venues-service
                 port:
                   number: 80

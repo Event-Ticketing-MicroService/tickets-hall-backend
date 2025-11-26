@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: payments-service
+  namespace: tickets-hall
+  labels:
+    app: payments-service
+spec:
+  selector:
+    app: payments-service
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8001
+  type: ClusterIP

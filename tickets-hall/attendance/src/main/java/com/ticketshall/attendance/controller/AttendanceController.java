@@ -18,8 +18,7 @@ public class AttendanceController {
     private final AttendanceService attendanceService;
 
     @PostMapping("/{ticketCode}")
-    public ResponseEntity<Object> attendTicket(@PathVariable String ticketCode)
-    {
+    public ResponseEntity<Object> attendTicket(@PathVariable String ticketCode) {
         attendanceService.useTicket(ticketCode);
         return ResponseEntity.ok().build();
     }

@@ -24,63 +24,66 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/venues")
 public class VenueController {
+
     private final VenueService venueService;
     private final VenueWorkerService venueWorkerService;
 
     @Operation(summary = "Get all venues")
     @GetMapping
-    public ResponseEntity<List<VenueResponseDTO>> getAllVenues(){
+    public ResponseEntity<List<VenueResponseDTO>> getAllVenues() {
         return ResponseEntity.ok().body(venueService.getAllVenues());
     }
 
     @Operation(summary = "Get Venue by ID")
     @GetMapping("/{id}")
-    public ResponseEntity<Optional<VenueResponseDTO>> getVenueById(@PathVariable Long id){
+    public ResponseEntity<Optional<VenueResponseDTO>> getVenueById(@PathVariable Long id) {
         return ResponseEntity.ok().body(venueService.getVenueById(id));
     }
 
     @Operation(summary = "Create a Venue")
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/admin", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<VenueResponseDTO> createVenue(
             @RequestPart("data") @Validated VenueRequestDTO venueRequestDTO,
             @RequestPart("image") MultipartFile image
-    ){
+    ) {
         ImageValidator imageValidator = new ImageValidator(image, true);
         imageValidator.validate();
         return ResponseEntity.ok(venueService.createVenue(venueRequestDTO, image));
     }
 
     @Operation(summary = "Updated a Venue")
-    @PatchMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PatchMapping(value = "/admin/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<VenueResponseDTO> updateVenue(
             @PathVariable Long id,
             @Validated @RequestPart("data") VenuePatchDTO venueRequestDTO,
-            @RequestPart("image") MultipartFile image){
+            @RequestPart("image") MultipartFile image) {
         return ResponseEntity.ok().body(venueService.updateVenue(venueRequestDTO, id, image));
     }
 
     @Operation(summary = "Deleted a Venue")
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteVenue(@PathVariable Long id){
-        if (venueService.getVenueById(id).isEmpty())throw new RuntimeException("Venue not found");
+    @DeleteMapping("/admin/{id}")
+    public ResponseEntity<Void> deleteVenue(@PathVariable Long id) {
+        if (venueService.getVenueById(id).isEmpty()) {
+            throw new RuntimeException("Venue not found");
+        }
         venueService.deleteVenue(id);
         return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "Get all venue Workers")
-    @GetMapping("/{id}/workers")
-    public ResponseEntity<List<WorkerResponseDTO>> getAllVenueWorkers(@PathVariable Long id){
+    @GetMapping("/admin/{id}/workers")
+    public ResponseEntity<List<WorkerResponseDTO>> getAllVenueWorkers(@PathVariable Long id) {
         return ResponseEntity.ok().body(venueWorkerService.getAllVenueWorkers(id));
     }
 
     @Operation(summary = "Added workers to Venue")
-    @PostMapping("/{id}/workers")
-    public ResponseEntity<List<WorkerResponseDTO>> addWorkers(@RequestHeader("X-User-ID") Long id, @RequestBody @Validated List<WorkerRequestDTO> workerRequestDTO){
-        return ResponseEntity.ok().body(venueWorkerService.addVenueWorker(workerRequestDTO,id));
+    @PostMapping("/admin/{id}/workers")
+    public ResponseEntity<List<WorkerResponseDTO>> addWorkers(@PathVariable Long id, @RequestBody @Validated List<WorkerRequestDTO> workerRequestDTO) {
+        return ResponseEntity.ok().body(venueWorkerService.addVenueWorker(workerRequestDTO, id));
     }
 
     @Operation(summary = "Delete Workers from a Venue")
-    @DeleteMapping("/{venueId}/workers")
+    @DeleteMapping("/admin/{venueId}/workers")
     public ResponseEntity<Void> deleteWorkers(
             @RequestBody List<Long> workerIdsToDelete) {
         venueWorkerService.deleteVenueWorker(workerIdsToDelete);
@@ -88,8 +91,8 @@ public class VenueController {
     }
 
     @Operation(summary = "Update worker fields")
-    @PatchMapping("/{id}/workers")
-    public ResponseEntity<WorkerResponseDTO> updateWorker(@RequestBody @Validated WorkerPatchDTO workerPatchDTO, @PathVariable Long id){
+    @PatchMapping("/admin/{id}/workers")
+    public ResponseEntity<WorkerResponseDTO> updateWorker(@RequestBody @Validated WorkerPatchDTO workerPatchDTO, @PathVariable Long id) {
         venueWorkerService.patchVenueWorker(workerPatchDTO);
         return ResponseEntity.ok().body(venueWorkerService.patchVenueWorker(workerPatchDTO));
     }

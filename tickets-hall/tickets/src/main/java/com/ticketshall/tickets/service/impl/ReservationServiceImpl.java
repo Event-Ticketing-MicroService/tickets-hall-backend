@@ -29,6 +29,7 @@ import java.util.concurrent.TimeUnit;
 @Service
 @RequiredArgsConstructor
 public class ReservationServiceImpl implements ReservationService {
+
     private final TicketTypeRepository ticketTypeRepository;
     private final RedissonClient redissonClient;
     private final PaymentServiceClient paymentServiceClient;
@@ -58,6 +59,7 @@ public class ReservationServiceImpl implements ReservationService {
 
                 ticketType.setAvailableStock(ticketType.getAvailableStock() - reqItem.quantity());
                 updateTicketTypeCache(request.eventId(), ticketType);
+                ticketTypeRepository.save(ticketType);
 
                 ReservationItem item = new ReservationItem(
                         ticketType.getId(),
@@ -79,10 +81,7 @@ public class ReservationServiceImpl implements ReservationService {
             }
         }
 
-        Reservation reservation = createAndStoreReservation(request, reservationItems, totalPrice);
-
-        CreatePaymentRequest paymentRequest = new CreatePaymentRequest(totalPrice, GeneralConstants.DEFAULT_CURRENCY, request.attendeeId().toString(), request.eventId().toString(), reservation.getId().toString());
-        return paymentServiceClient.createIntent(paymentRequest).getBody();
+        return createAndStoreReservation(request, reservationItems, totalPrice);
     }
 
     private String buildTicketTypeKey(UUID eventId, UUID ticketTypeId) {
@@ -92,9 +91,11 @@ public class ReservationServiceImpl implements ReservationService {
                 GeneralConstants.REDIS_TICKET_TYPE_INFIX,
                 ticketTypeId);
     }
+
     private String getEventTicketTypesKey(UUID eventId) {
         return GeneralConstants.REDIS_EVENT_PREFIX + eventId + GeneralConstants.REDIS_TICKET_TYPE_INFIX;
     }
+
     private TicketType getOrLoadTicketType(String key, UUID ticketTypeId, UUID eventId) {
         RMap<String, String> hashMap = redissonClient.getMap(key);
 
@@ -103,7 +104,7 @@ public class ReservationServiceImpl implements ReservationService {
         // builds the cacheList if not exist or empty
         if (!cachedList.isExists() && cachedList.isEmpty()) {
             List<TicketType> ticketTypes = ticketTypeRepository.getTicketTypesByEventId(eventId);
-            if(!ticketTypes.isEmpty()) {
+            if (!ticketTypes.isEmpty()) {
                 cachedList.addAll(ticketTypes);
             }
         }
@@ -172,7 +173,7 @@ public class ReservationServiceImpl implements ReservationService {
         }
     }
 
-    private Reservation createAndStoreReservation(ReservationRequest request, List<ReservationItem> items, float totalPrice) {
+    private CreatePaymentResponse createAndStoreReservation(ReservationRequest request, List<ReservationItem> items, float totalPrice) {
         UUID reservationId = UUID.randomUUID();
 
         CreatePaymentRequest paymentRequest = new CreatePaymentRequest(totalPrice, GeneralConstants.DEFAULT_CURRENCY, request.attendeeId().toString(), request.eventId().toString(), reservationId.toString());
@@ -196,7 +197,7 @@ public class ReservationServiceImpl implements ReservationService {
         RBucket<Reservation> bucket = redissonClient.getBucket(reservationKey);
         bucket.set(reservation, TTL);
 
-        return reservation;
+        return response;
     }
 
     public void expireReservation(UUID reservationId, boolean recoverStock) {
@@ -204,7 +205,9 @@ public class ReservationServiceImpl implements ReservationService {
         RBucket<Reservation> bucket = redissonClient.getBucket(redisKey);
         Reservation reservation = bucket.get();
 
-        if (reservation == null) return;
+        if (reservation == null) {
+            return;
+        }
 
         if (!recoverStock) {
             bucket.delete();
@@ -215,13 +218,16 @@ public class ReservationServiceImpl implements ReservationService {
 
             RLock lock = redissonClient.getLock("lock:" + ticketTypeKey);
             try {
-                if (!lock.tryLock(5, 10, TimeUnit.SECONDS)) continue;
+                if (!lock.tryLock(5, 10, TimeUnit.SECONDS)) {
+                    continue;
+                }
 
                 TicketType ticketType = getOrLoadTicketType(ticketTypeKey,
                         item.getTicketTypeId(),
                         reservation.getEventId());
                 ticketType.setAvailableStock(ticketType.getAvailableStock() + item.getQuantity());
                 updateTicketTypeCache(reservation.getEventId(), ticketType);
+                ticketTypeRepository.save(ticketType);
 
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();

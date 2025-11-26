@@ -50,6 +50,6 @@ requirements.txt
 .venv
 
 *.toml
-mise.toml
+!mise.toml
 
 test*.yml
