@@ -19,34 +19,6 @@ spec:
                 name: auth-service
                 port:
                   number: 80
-          - path: /(customers/public.*)
-            pathType: ImplementationSpecific
-            backend:
-              service:
-                name: customers-service
-                port:
-                  number: 80
-          - path: /(events/public.*)
-            pathType: ImplementationSpecific
-            backend:
-              service:
-                name: events-service
-                port:
-                  number: 80
-          - path: /(categories/public.*)
-            pathType: ImplementationSpecific
-            backend:
-              service:
-                name: events-service
-                port:
-                  number: 80
-          - path: /(ticket-types/public.*)
-            pathType: ImplementationSpecific
-            backend:
-              service:
-                name: events-service
-                port:
-                  number: 80
           - path: /(venues/public.*)
             pathType: ImplementationSpecific
             backend:
@@ -59,5 +31,76 @@ spec:
             backend:
               service:
                 name: attendance-service
+                port:
+                  number: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: public-api-ingress
+  namespace: tickets-hall
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /api/$1
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: tickets-hall.local
+      http:
+        paths:
+          - path: /(customers/public)(?:/)?$
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: customers-service
+                port:
+                  number: 80
+          - path: /(customers/public/.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: customers-service
+                port:
+                  number: 80
+          - path: /(events/public)(?:/)?$
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: events-service
+                port:
+                  number: 80
+          - path: /(events/public/.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: events-service
+                port:
+                  number: 80
+          - path: /(categories/public)(?:/)?$
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: events-service
+                port:
+                  number: 80
+          - path: /(categories/public/.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: events-service
+                port:
+                  number: 80
+          - path: /(ticket-types/public)(?:/)?$
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: events-service
+                port:
+                  number: 80
+          - path: /(ticket-types/public/.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: events-service
                 port:
                   number: 80

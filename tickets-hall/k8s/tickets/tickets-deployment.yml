@@ -21,19 +21,6 @@ spec:
           imagePullPolicy: Always
           ports:
             - containerPort: 5000
-            - containerPort: 1234
-          livenessProbe:
-            httpGet:
-              path: /actuator/health/liveness
-              port: 1234
-            initialDelaySeconds: 20
-            periodSeconds: 10
-          readinessProbe:
-            httpGet:
-              path: /actuator/health/readiness
-              port: 1234
-            initialDelaySeconds: 20
-            periodSeconds: 10
           env:
             - name: SPRING_PROFILES_ACTIVE
               value: "k8s"
@@ -62,5 +49,5 @@ spec:
               memory: "256Mi"
               cpu: "250m"
             limits:
-              memory: "512Mi"
+              memory: "1024Mi"
               cpu: "500m"

@@ -22,14 +22,13 @@ public class SecurityConfig {
 
     private final UserDetailsService customUserDetailsService;
 
-
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login", "/validate").permitAll()
-                        .anyRequest().authenticated()
+                .requestMatchers("/login", "/validate", "/auth/public/**").permitAll()
+                .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 

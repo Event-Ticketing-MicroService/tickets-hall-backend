@@ -15,45 +15,105 @@ spec:
     - host: tickets-hall.local
       http:
         paths:
-          - path: /(customers/user.*)
+          - path: /(attendance/user.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: attendance-service
+                port:
+                  number: 80
+          - path: /reservations(/user.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: tickets-service
+                port:
+                  number: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: user-api-ingress
+  namespace: tickets-hall
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /api/$1
+    nginx.ingress.kubernetes.io/auth-url: "http://auth-service.tickets-hall.svc.cluster.local/auth/validate?role=USER"
+    nginx.ingress.kubernetes.io/auth-method: "POST"
+    nginx.ingress.kubernetes.io/auth-response-headers: "X-User-ID"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: tickets-hall.local
+      http:
+        paths:
+          - path: /(customers/user)(?:/)?$
             pathType: ImplementationSpecific
             backend:
               service:
                 name: customers-service
                 port:
                   number: 80
-          - path: /(events/user.*)
+          - path: /(customers/user/.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: customers-service
+                port:
+                  number: 80
+          - path: /(events/user)(?:/)?$
             pathType: ImplementationSpecific
             backend:
               service:
                 name: events-service
                 port:
                   number: 80
-          - path: /(categories/user.*)
+          - path: /(events/user/.*)
             pathType: ImplementationSpecific
             backend:
               service:
                 name: events-service
                 port:
                   number: 80
-          - path: /(ticket-types/user.*)
+          - path: /(categories/user)(?:/)?$
             pathType: ImplementationSpecific
             backend:
               service:
                 name: events-service
                 port:
                   number: 80
-          - path: /(venues/user.*)
+          - path: /(categories/user/.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: events-service
+                port:
+                  number: 80
+          - path: /(ticket-types/user)(?:/)?$
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: events-service
+                port:
+                  number: 80
+          - path: /(ticket-types/user/.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: events-service
+                port:
+                  number: 80
+          - path: /(venues/user)(?:/)?$
             pathType: ImplementationSpecific
             backend:
               service:
                 name: venues-service
                 port:
                   number: 80
-          - path: /(attendance/user.*)
+          - path: /(venues/user/.*)
             pathType: ImplementationSpecific
             backend:
               service:
-                name: attendance-service
+                name: venues-service
                 port:
                   number: 80
