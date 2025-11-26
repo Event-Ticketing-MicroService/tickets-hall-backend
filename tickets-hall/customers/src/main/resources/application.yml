@@ -1,0 +1,73 @@
+server:
+  servlet:
+    context-path: /api
+  error:
+    include-message: always
+
+spring:
+  application:
+    name: customers
+  datasource:
+    url: jdbc:postgresql://localhost:5434/customers
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
+        implicit-strategy: org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: admin
+    password: admin
+    listener:
+      simple:
+        retry:
+          enabled: true
+          initial-interval: 2000ms
+          max-attempts: 5
+          max-interval: 10000ms
+          multiplier: 2.0
+        default-requeue-rejected: false
+        acknowledge-mode: auto
+
+app:
+  rabbitmq:
+    exchanges:
+      customer: customers.exchange
+      dead-letter: deadLetter.exchange
+    routing:
+      customer-created: customer.created
+      customer-updated: customer.updated
+      customer-deleted: customer.deleted
+      dead-letter: customers.dead.letter
+    queues:
+      dead-letter: customers.final.dead.letter.queue
+  outbox:
+    max-retries: 5
+    publish-interval: 5000
+    cleanup-cron: "0 0 2 * * ?"
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always

@@ -78,3 +78,12 @@ app:
       workerCreated: auth.worker.created.queue
       workerUpdated: auth.worker.updated.queue
       workerDeleted: auth.worker.deleted.queue
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always

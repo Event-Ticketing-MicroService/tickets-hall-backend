@@ -2,9 +2,11 @@ server:
   port: 5000
 
 spring:
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
   # Database Configuration
   datasource:
-    url: jdbc:postgresql://localhost:5432/attendance?createDatabaseIfNotExist=true
+    url: jdbc:postgresql://localhost:5433/attendance?createDatabaseIfNotExist=true
     username: postgres
     password: postgres
     driver-class-name: org.postgresql.Driver
@@ -73,3 +75,20 @@ app:
       ticketUpdated: attendance.ticket.updated.queue
       ticketDeleted: attendance.ticket.deleted.queue
       dead-letter: attendance.final.dead.letter.queue
+
+management:
+  server:
+    port: 1234
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      group:
+        liveness:
+          include: livenessState
+        readiness:
+          include: readinessState
+      show-details: always
+      validate-group-membership: false
