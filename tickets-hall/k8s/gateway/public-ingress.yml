@@ -19,7 +19,48 @@ spec:
                 name: auth-service
                 port:
                   number: 80
-          # - path: /service-name(/|$)(.*)
+          - path: /customers(/)(register)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: customers-service
+                port:
+                  number: 80
+          - path: /events(/|$)(?!admin)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: events-service
+                port:
+                  number: 80
+          - path: /categories(/|$)(?!admin)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: events-service
+                port:
+                  number: 80
+          - path: /reservations(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: tickets-service
+                port:
+                  number: 80
+          - path: /venues(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: venues-service
+                port:
+                  number: 80
+          - path: /ticket-types(/|$)(?!admin)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: tickets-service
+                port:
+                  number: 80
           #   pathType: ImplementationSpecific
           #   backend:
           #     service:

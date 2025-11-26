@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: venues-service
+  namespace: tickets-hall
+  labels:
+    app: venues-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: venues-service
+  template:
+    metadata:
+      labels:
+        app: venues-service
+    spec:
+      containers:
+        - name: venues-service
+          image: ghcr.io/event-ticketing-microservice/tickets-hall-venues:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "k8s"
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:postgresql://postgres-venues:5432/venues"
+            - name: SPRING_DATASOURCE_USERNAME
+              value: "postgres"
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: "postgres"
+            - name: CLOUDINARY_CLOUD_NAME
+              value: "placeholder"
+            - name: CLOUDINARY_API_KEY
+              value: "placeholder"
+            - name: CLOUDINARY_API_SECRET
+              value: "placeholder"
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"

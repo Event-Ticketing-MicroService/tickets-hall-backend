@@ -15,10 +15,10 @@ spec:
     - host: tickets-hall.local
       http:
         paths:
-          - path: /service-name(/|$)(.*)
+          - path: /customers(/|$)(?!admin)(.*)
             pathType: ImplementationSpecific
             backend:
               service:
-                name: service-label
+                name: customers-service
                 port:
                   number: 80
