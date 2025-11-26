@@ -31,8 +31,6 @@ public class UserCredentials {
     @Column(nullable = false)
     private String password;
 
-    private Long externalId;
-
     @Enumerated(EnumType.STRING)
     private Role role;
 
