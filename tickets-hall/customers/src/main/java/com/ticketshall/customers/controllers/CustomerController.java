@@ -5,27 +5,24 @@ import com.ticketshall.customers.dtos.UpdateCustomerDto;
 import com.ticketshall.customers.services.CustomerService;
 import com.ticketshall.customers.models.Customer;
 import com.ticketshall.result.Result;
-import org.springframework.beans.factory.annotation.Autowired;
+
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @RestController
-@RequestMapping(path = "api/customers")
+@RequestMapping("/customers")
+@RequiredArgsConstructor
 public class CustomerController {
 
     private final CustomerService customerService;
 
-    @Autowired
-    public CustomerController(CustomerService customerService) {
-        this.customerService = customerService;
-    }
-
-    @GetMapping
+    @GetMapping("/admin")
     public ResponseEntity<List<Customer>> getAllCustomers() {
         return ResponseEntity.ok(customerService.getAllCustomers());
     }
@@ -52,7 +49,7 @@ public class CustomerController {
         }
     }
 
-    @PostMapping
+    @PostMapping("/register")
     public ResponseEntity<?> addCustomer(@RequestBody CreateCustomerDto customerDto) {
         try {
             var addedCustomer = customerService.addCustomer(customerDto);
@@ -74,7 +71,7 @@ public class CustomerController {
         }
     }
 
-    @DeleteMapping(path = "/{id}")
+    @DeleteMapping(path = "/admin/{id}")
     public ResponseEntity<?> deleteCustomer(@PathVariable Long id) {
         boolean deleted = customerService.deleteCustomer(id);
         if (deleted) {

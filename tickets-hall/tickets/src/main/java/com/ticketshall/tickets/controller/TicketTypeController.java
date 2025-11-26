@@ -11,27 +11,31 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/TicketTypes")
 @RequiredArgsConstructor
 public class TicketTypeController {
+
     private final TicketTypeService ticketTypeService;
-    @PostMapping()
-    public ResponseEntity<TicketType> CreateTicketType(@RequestBody CreateTicketTypeRequest request){
+
+    @PostMapping("/admin")
+    public ResponseEntity<TicketType> CreateTicketType(@RequestBody CreateTicketTypeRequest request) {
         var ticketType = ticketTypeService.createTicketType(request);
         return ResponseEntity.created(null).body(ticketType);
     }
+
     @GetMapping("/{eventId}")
-    public ResponseEntity<Iterable<TicketType>> ListTicketTypesForEvent(@PathVariable("eventId") UUID eventId){
+    public ResponseEntity<Iterable<TicketType>> ListTicketTypesForEvent(@PathVariable("eventId") UUID eventId) {
         var result = ticketTypeService.listTicketTypesForEvent(eventId);
         return ResponseEntity.ok(result);
     }
-    @PutMapping()
-    public ResponseEntity<TicketType> UpdateTicketType(@RequestBody UpdateTicketTypeRequest request){
+
+    @PutMapping("/admin")
+    public ResponseEntity<TicketType> UpdateTicketType(@RequestBody UpdateTicketTypeRequest request) {
         var result = ticketTypeService.updateTicketType(request);
         return ResponseEntity.ok(result);
     }
-    @DeleteMapping("/{ticketTypeId}")
-    public ResponseEntity<Boolean> DeleteTicketType(@PathVariable("ticketTypeId") UUID ticketTypeId){
+
+    @DeleteMapping("/admin/{ticketTypeId}")
+    public ResponseEntity<Boolean> DeleteTicketType(@PathVariable("ticketTypeId") UUID ticketTypeId) {
         var result = ticketTypeService.deleteTicketType(ticketTypeId);
         return ResponseEntity.ok(result);
     }

@@ -16,23 +16,22 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/categories")
 public class CategoryController {
+
     private CategoryService categoryService;
 
     @Autowired
-    public CategoryController(CategoryService categoryService){
+    public CategoryController(CategoryService categoryService) {
         this.categoryService = categoryService;
     }
 
-
-    @PostMapping("")
+    @PostMapping("/admin")
     ResponseEntity<?> createCategory(@Valid @RequestBody CategoryParams categoryParams) {
         Category category = categoryService.createCategory(categoryParams);
         return ResponseEntity.status(HttpStatus.CREATED).body(category);
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/admin/{id}")
     ResponseEntity<?> updateCategory(@PathVariable UUID id, @Valid @RequestBody CategoryParams categoryParams) {
         Category category = categoryService.updateCategory(id, categoryParams);
         return ResponseEntity.ok(category);
@@ -40,7 +39,7 @@ public class CategoryController {
 
     @GetMapping("")
     ResponseEntity<ListResponse> getAllCategories(
-            @SortDefault(sort = "createdAt",direction = Sort.Direction.DESC) Sort sort,
+            @SortDefault(sort = "createdAt", direction = Sort.Direction.DESC) Sort sort,
             @RequestParam(required = false) String name) {
         List<Category> categories = categoryService.findAll(name, sort);
         ListResponse<Category> responseList = new ListResponse<>(categories, categories.size());

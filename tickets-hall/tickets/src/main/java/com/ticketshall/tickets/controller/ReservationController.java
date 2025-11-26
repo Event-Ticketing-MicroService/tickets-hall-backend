@@ -12,15 +12,17 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/reservations")
 @RequiredArgsConstructor
 public class ReservationController {
+
     private final ReservationService reservationService;
+
     @PostMapping()
     public ResponseEntity<CreatePaymentResponse> createReservation(@RequestBody ReservationRequest request) {
         var result = reservationService.reserve(request);
         return ResponseEntity.ok(result);
     }
+
     @PostMapping("/{reservationId}")
     public ResponseEntity<Boolean> cancelReservation(@PathVariable("reservationId") String reservationId) {
         reservationService.expireReservation(UUID.fromString(reservationId), true);
