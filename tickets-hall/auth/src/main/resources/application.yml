@@ -8,7 +8,7 @@ spring:
     username: postgres
     password: postgres
     driver-class-name: org.postgresql.Driver
-  
+
   # JPA/Hibernate Configuration
   jpa:
     hibernate:
@@ -17,8 +17,8 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-        '[format_sql]': true
-  
+        "[format_sql]": true
+
   # Redis Configuration
   data:
     redis:

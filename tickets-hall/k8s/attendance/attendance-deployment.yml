@@ -17,8 +17,8 @@ spec:
     spec:
       containers:
       - name: attendance-service
-        image: attendance-service:latest
-        imagePullPolicy: Never
+        image: ghcr.io/event-ticketing-microservice/tickets-hall-attendance:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 5000
         env:
