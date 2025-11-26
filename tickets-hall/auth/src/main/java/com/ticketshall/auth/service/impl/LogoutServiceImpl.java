@@ -13,6 +13,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
+
 @Service
 @RequiredArgsConstructor
 public class LogoutServiceImpl implements LogoutService, LogoutHandler {
@@ -20,7 +22,8 @@ public class LogoutServiceImpl implements LogoutService, LogoutHandler {
     private final JwtUtil jwtUtil;
 
     @Value("${jwt.access-token-expiration}")
-    private long jwtExpiration;
+    private Duration jwtExpiration; // Use Duration instead of long
+
     @Override
     public void logout(HttpServletRequest request,
                        HttpServletResponse response,
@@ -35,11 +38,10 @@ public class LogoutServiceImpl implements LogoutService, LogoutHandler {
 
         String jti = jwtUtil.extractClaim(jwtToken, Claims::getId);
         if (jti == null) {
-
             throw new IllegalStateException("JWT does not contain jti (id) claim");
         }
 
-        long expireMins = jwtExpiration / 60000;
+        long expireMins = jwtExpiration.toMinutes(); // Convert Duration to minutes
 
         redisService.setInRedis(jti, "true", expireMins);
 

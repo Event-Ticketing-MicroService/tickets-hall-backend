@@ -8,16 +8,18 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.ticketshall.attendance.services.AttendanceService;
 
-import lombok.RequiredArgsConstructor;
-
 @RestController
-@RequestMapping("/attendances")
-@RequiredArgsConstructor
+
+@RequestMapping("/attendance")
 public class AttendanceController {
 
     private final AttendanceService attendanceService;
 
-    @PostMapping("/{ticketCode}")
+    public AttendanceController(AttendanceService attendanceService) {
+        this.attendanceService = attendanceService;
+    }
+
+    @PostMapping("/worker/{ticketCode}")
     public ResponseEntity<Object> attendTicket(@PathVariable String ticketCode) {
         attendanceService.useTicket(ticketCode);
         return ResponseEntity.ok().build();

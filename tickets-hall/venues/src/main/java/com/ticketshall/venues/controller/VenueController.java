@@ -10,7 +10,7 @@ import com.ticketshall.venues.service.VenueService;
 import com.ticketshall.venues.service.VenueWorkerService;
 import com.ticketshall.venues.validators.ImageValidator;
 import io.swagger.v3.oas.annotations.Operation;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -20,22 +20,26 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 import java.util.Optional;
 
-@RequiredArgsConstructor
 @RestController
-@RequestMapping("/api/venues")
+@RequestMapping("/venues")
 public class VenueController {
 
     private final VenueService venueService;
     private final VenueWorkerService venueWorkerService;
 
+    public VenueController(VenueService venueService, VenueWorkerService venueWorkerService) {
+        this.venueService = venueService;
+        this.venueWorkerService = venueWorkerService;
+    }
+
     @Operation(summary = "Get all venues")
-    @GetMapping
+    @GetMapping("/public")
     public ResponseEntity<List<VenueResponseDTO>> getAllVenues() {
         return ResponseEntity.ok().body(venueService.getAllVenues());
     }
 
     @Operation(summary = "Get Venue by ID")
-    @GetMapping("/{id}")
+    @GetMapping("/public/{id}")
     public ResponseEntity<Optional<VenueResponseDTO>> getVenueById(@PathVariable Long id) {
         return ResponseEntity.ok().body(venueService.getVenueById(id));
     }
@@ -71,29 +75,29 @@ public class VenueController {
     }
 
     @Operation(summary = "Get all venue Workers")
-    @GetMapping("/admin/{id}/workers")
-    public ResponseEntity<List<WorkerResponseDTO>> getAllVenueWorkers(@PathVariable Long id) {
-        return ResponseEntity.ok().body(venueWorkerService.getAllVenueWorkers(id));
+    @GetMapping("/venue/workers")
+    public ResponseEntity<List<WorkerResponseDTO>> getAllVenueWorkers(@RequestHeader("X-User-ID") Long venueId) {
+        return ResponseEntity.ok().body(venueWorkerService.getAllVenueWorkers(venueId));
     }
 
     @Operation(summary = "Added workers to Venue")
-    @PostMapping("/admin/{id}/workers")
-    public ResponseEntity<List<WorkerResponseDTO>> addWorkers(@PathVariable Long id, @RequestBody @Validated List<WorkerRequestDTO> workerRequestDTO) {
-        return ResponseEntity.ok().body(venueWorkerService.addVenueWorker(workerRequestDTO, id));
+    @PostMapping("/venue/workers")
+    public ResponseEntity<List<WorkerResponseDTO>> addWorkers(@RequestHeader("X-User-ID") Long venueId, @RequestBody @Validated List<WorkerRequestDTO> workerRequestDTO) {
+        return ResponseEntity.ok().body(venueWorkerService.addVenueWorker(workerRequestDTO, venueId));
     }
 
     @Operation(summary = "Delete Workers from a Venue")
-    @DeleteMapping("/admin/{venueId}/workers")
+    @DeleteMapping("/venue/workers")
     public ResponseEntity<Void> deleteWorkers(
+            @RequestHeader("X-User-ID") Long venueId,
             @RequestBody List<Long> workerIdsToDelete) {
         venueWorkerService.deleteVenueWorker(workerIdsToDelete);
         return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "Update worker fields")
-    @PatchMapping("/admin/{id}/workers")
-    public ResponseEntity<WorkerResponseDTO> updateWorker(@RequestBody @Validated WorkerPatchDTO workerPatchDTO, @PathVariable Long id) {
-        venueWorkerService.patchVenueWorker(workerPatchDTO);
+    @PatchMapping("/venue/workers")
+    public ResponseEntity<WorkerResponseDTO> updateWorker(@RequestHeader("X-User-ID") Long venueId, @RequestBody @Validated WorkerPatchDTO workerPatchDTO) {
         return ResponseEntity.ok().body(venueWorkerService.patchVenueWorker(workerPatchDTO));
     }
 }

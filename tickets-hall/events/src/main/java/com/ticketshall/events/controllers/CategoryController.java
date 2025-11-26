@@ -5,7 +5,7 @@ import com.ticketshall.events.dtos.responses.ListResponse;
 import com.ticketshall.events.models.Category;
 import com.ticketshall.events.services.CategoryService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.SortDefault;
 import org.springframework.http.HttpStatus;
@@ -16,11 +16,11 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
+@RequestMapping("/categories")
 public class CategoryController {
 
-    private CategoryService categoryService;
+    private final CategoryService categoryService;
 
-    @Autowired
     public CategoryController(CategoryService categoryService) {
         this.categoryService = categoryService;
     }
@@ -37,7 +37,7 @@ public class CategoryController {
         return ResponseEntity.ok(category);
     }
 
-    @GetMapping("")
+    @GetMapping("/public")
     ResponseEntity<ListResponse> getAllCategories(
             @SortDefault(sort = "createdAt", direction = Sort.Direction.DESC) Sort sort,
             @RequestParam(required = false) String name) {

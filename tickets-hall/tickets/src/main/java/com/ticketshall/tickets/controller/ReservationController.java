@@ -17,7 +17,7 @@ public class ReservationController {
 
     private final ReservationService reservationService;
 
-    @PostMapping()
+    @PostMapping("/user")
     public ResponseEntity<CreatePaymentResponse> createReservation(@RequestBody ReservationRequest request) {
         var result = reservationService.reserve(request);
         return ResponseEntity.ok(result);

@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
+@RequestMapping("/ticket-types")
 public class TicketTypeController {
 
     private final TicketTypeService ticketTypeService;
@@ -24,13 +25,13 @@ public class TicketTypeController {
         this.ticketTypeService = ticketTypeService;
     }
 
-    @PostMapping("/admin/{eventId}/ticket-types")
+    @PostMapping("/venue/{eventId}")
     public ResponseEntity<?> createTicketTypes(
             @PathVariable UUID eventId,
             @RequestBody @Valid @NotEmpty(message = "ticketTypes list cannot be empty") List<@Valid CreateTicketTypeParams> createTicketTypeParams
     ) {
 
         List<TicketType> ticketTypes = ticketTypeService.createTicketTypes(eventId, createTicketTypeParams);
-        return ResponseEntity.status(HttpStatus.CREATED).body(new ListResponse<TicketType>(ticketTypes, ticketTypes.size()));
+        return ResponseEntity.status(HttpStatus.CREATED).body(new ListResponse<>(ticketTypes, ticketTypes.size()));
     }
 }

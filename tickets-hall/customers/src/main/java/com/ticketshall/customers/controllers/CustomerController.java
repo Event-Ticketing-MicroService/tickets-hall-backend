@@ -16,8 +16,8 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/customers")
 @RequiredArgsConstructor
+@RequestMapping("/customers")
 public class CustomerController {
 
     private final CustomerService customerService;
@@ -27,7 +27,7 @@ public class CustomerController {
         return ResponseEntity.ok(customerService.getAllCustomers());
     }
 
-    @GetMapping(path = "/{id}")
+    @GetMapping(path = "/admin/{id}")
     public ResponseEntity<?> getCustomerById(@PathVariable Long id) {
         try {
             var customer = customerService.getCustomerById(id);
@@ -49,7 +49,7 @@ public class CustomerController {
         }
     }
 
-    @PostMapping("/register")
+    @PostMapping("/public/register")
     public ResponseEntity<?> addCustomer(@RequestBody CreateCustomerDto customerDto) {
         try {
             var addedCustomer = customerService.addCustomer(customerDto);
@@ -60,7 +60,7 @@ public class CustomerController {
         }
     }
 
-    @PutMapping(path = "/{id}")
+    @PutMapping(path = "/admin/{id}")
     public ResponseEntity<?> updateCustomer(@PathVariable Long id, @RequestBody UpdateCustomerDto updatedCustomerDto) {
         try {
             var savedCustomer = customerService.updateCustomer(id, updatedCustomerDto);

@@ -5,65 +5,59 @@ metadata:
   namespace: tickets-hall
   annotations:
     nginx.ingress.kubernetes.io/use-regex: "true"
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
 spec:
   ingressClassName: nginx
   rules:
     - host: tickets-hall.local
       http:
         paths:
-          - path: /auth(/|$)(.*)
+          - path: /(auth/public.*)
             pathType: ImplementationSpecific
             backend:
               service:
                 name: auth-service
                 port:
                   number: 80
-          - path: /customers(/)(register)
+          - path: /(customers/public.*)
             pathType: ImplementationSpecific
             backend:
               service:
                 name: customers-service
                 port:
                   number: 80
-          - path: /events(/|$)(?!admin)(.*)
+          - path: /(events/public.*)
             pathType: ImplementationSpecific
             backend:
               service:
                 name: events-service
                 port:
                   number: 80
-          - path: /categories(/|$)(?!admin)(.*)
+          - path: /(categories/public.*)
             pathType: ImplementationSpecific
             backend:
               service:
                 name: events-service
                 port:
                   number: 80
-          - path: /reservations(/|$)(.*)
+          - path: /(ticket-types/public.*)
             pathType: ImplementationSpecific
             backend:
               service:
-                name: tickets-service
+                name: events-service
                 port:
                   number: 80
-          - path: /venues(/|$)(.*)
+          - path: /(venues/public.*)
             pathType: ImplementationSpecific
             backend:
               service:
                 name: venues-service
                 port:
                   number: 80
-          - path: /ticket-types(/|$)(?!admin)(.*)
+          - path: /(attendance/public.*)
             pathType: ImplementationSpecific
             backend:
               service:
-                name: tickets-service
+                name: attendance-service
                 port:
                   number: 80
-          #   pathType: ImplementationSpecific
-          #   backend:
-          #     service:
-          #       name: service-label
-          #       port:
-          #         number: 80

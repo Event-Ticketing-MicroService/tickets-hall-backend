@@ -10,9 +10,9 @@ import com.ticketshall.events.models.Event;
 import com.ticketshall.events.services.EventService;
 import com.ticketshall.events.validations.EventValidator;
 import com.ticketshall.events.validations.ImageValidator;
-import jakarta.servlet.ServletRequest;
+
 import jakarta.validation.Valid;
-import org.hibernate.annotations.PartitionKey;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -27,6 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.UUID;
 
 @RestController
+@RequestMapping("/events")
 public class EventsController {
 
     private final EventService eventService;
@@ -53,13 +54,13 @@ public class EventsController {
     }
 
     // get single event
-    @GetMapping("/{id}")
+    @GetMapping("/public/{id}")
     ResponseEntity<?> getEvent(@PathVariable UUID id) {
         Event event = eventService.getEvent(id);
         return ResponseEntity.ok().body(eventMapper.toEventDTO(event));
     }
 
-    @GetMapping("")
+    @GetMapping("/public")
     ResponseEntity<?> getAllEvents(
             EventFilterParams eventFilterParams,
             @PageableDefault(size = 10, page = 0, sort = "startsAt", direction = Sort.Direction.DESC) Pageable pageable

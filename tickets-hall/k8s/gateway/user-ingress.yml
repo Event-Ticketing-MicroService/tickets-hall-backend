@@ -5,8 +5,8 @@ metadata:
   namespace: tickets-hall
   annotations:
     nginx.ingress.kubernetes.io/use-regex: "true"
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
-    nginx.ingress.kubernetes.io/auth-url: "http://auth-service.tickets-hall.svc.cluster.local/validate?role=USER"
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+    nginx.ingress.kubernetes.io/auth-url: "http://auth-service.tickets-hall.svc.cluster.local/auth/validate?role=USER"
     nginx.ingress.kubernetes.io/auth-method: "POST"
     nginx.ingress.kubernetes.io/auth-response-headers: "X-User-ID"
 spec:
@@ -15,10 +15,45 @@ spec:
     - host: tickets-hall.local
       http:
         paths:
-          - path: /customers(/|$)(?!admin)(.*)
+          - path: /(customers/user.*)
             pathType: ImplementationSpecific
             backend:
               service:
                 name: customers-service
+                port:
+                  number: 80
+          - path: /(events/user.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: events-service
+                port:
+                  number: 80
+          - path: /(categories/user.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: events-service
+                port:
+                  number: 80
+          - path: /(ticket-types/user.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: events-service
+                port:
+                  number: 80
+          - path: /(venues/user.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: venues-service
+                port:
+                  number: 80
+          - path: /(attendance/user.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: attendance-service
                 port:
                   number: 80

@@ -5,8 +5,8 @@ metadata:
   namespace: tickets-hall
   annotations:
     nginx.ingress.kubernetes.io/use-regex: "true"
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
-    nginx.ingress.kubernetes.io/auth-url: "http://auth-service.tickets-hall.svc.cluster.local/validate?role=ADMIN"
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+    nginx.ingress.kubernetes.io/auth-url: "http://auth-service.tickets-hall.svc.cluster.local/auth/validate?role=ADMIN"
     nginx.ingress.kubernetes.io/auth-method: "POST"
     nginx.ingress.kubernetes.io/auth-response-headers: "X-User-ID"
 spec:
@@ -15,35 +15,35 @@ spec:
     - host: tickets-hall.local
       http:
         paths:
-          - path: /customers(/?)(admin.*)
+          - path: /(customers/admin.*)
             pathType: ImplementationSpecific
             backend:
               service:
                 name: customers-service
                 port:
                   number: 80
-          - path: /events(/?)(admin.*)
+          - path: /(events/admin.*)
             pathType: ImplementationSpecific
             backend:
               service:
                 name: events-service
                 port:
                   number: 80
-          - path: /categories(/?)(admin.*)
+          - path: /(categories/admin.*)
             pathType: ImplementationSpecific
             backend:
               service:
                 name: events-service
                 port:
                   number: 80
-          - path: /ticket-types(/?)(admin.*)
+          - path: /(ticket-types/admin.*)
             pathType: ImplementationSpecific
             backend:
               service:
-                name: tickets-service
+                name: events-service
                 port:
                   number: 80
-          - path: /venues(/?)(admin.*)
+          - path: /(venues/admin.*)
             pathType: ImplementationSpecific
             backend:
               service:

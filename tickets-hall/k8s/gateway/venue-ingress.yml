@@ -1,12 +1,12 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: worker-ingress
+  name: venue-ingress
   namespace: tickets-hall
   annotations:
     nginx.ingress.kubernetes.io/use-regex: "true"
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
-    nginx.ingress.kubernetes.io/auth-url: "http://auth-service.tickets-hall.svc.cluster.local/validate?role=VENUE"
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+    nginx.ingress.kubernetes.io/auth-url: "http://auth-service.tickets-hall.svc.cluster.local/auth/validate?role=VENUE"
     nginx.ingress.kubernetes.io/auth-method: "POST"
     nginx.ingress.kubernetes.io/auth-response-headers: "X-User-ID"
 spec:
@@ -15,10 +15,45 @@ spec:
     - host: tickets-hall.local
       http:
         paths:
-          - path: /service-name(/|$)(.*)
+          - path: /(customers/venue.*)
             pathType: ImplementationSpecific
             backend:
               service:
-                name: service-label
+                name: customers-service
+                port:
+                  number: 80
+          - path: /(events/venue.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: events-service
+                port:
+                  number: 80
+          - path: /(categories/venue.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: events-service
+                port:
+                  number: 80
+          - path: /(ticket-types/venue.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: events-service
+                port:
+                  number: 80
+          - path: /(venues/venue.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: venues-service
+                port:
+                  number: 80
+          - path: /(attendance/venue.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: attendance-service
                 port:
                   number: 80

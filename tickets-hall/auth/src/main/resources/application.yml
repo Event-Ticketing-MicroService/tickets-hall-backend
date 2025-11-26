@@ -19,6 +19,22 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         "[format_sql]": true
 
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: admin
+    password: admin
+    listener:
+      simple:
+        retry:
+          enabled: true
+          initial-interval: 2000ms
+          max-attempts: 5
+          max-interval: 10000ms
+          multiplier: 2.0
+        default-requeue-rejected: false
+        acknowledge-mode: auto
+
   # Redis Configuration
   data:
     redis:
@@ -48,21 +64,7 @@ resilience4j:
           - feign.RetryableException
 
   # RabbitMQ Configuration
-  rabbitmq:
-    host: localhost
-    port: 5672
-    username: admin
-    password: admin
-    listener:
-      simple:
-        retry:
-          enabled: true
-          initial-interval: 2000ms
-          max-attempts: 5
-          max-interval: 10000ms
-          multiplier: 2.0
-        default-requeue-rejected: false
-        acknowledge-mode: auto
+
 
 # Application-specific RabbitMQ Configuration
 app:
@@ -79,6 +81,7 @@ app:
       workerCreated: auth.worker.created.queue
       workerUpdated: auth.worker.updated.queue
       workerDeleted: auth.worker.deleted.queue
+      dead-letter: auth.final.dead.letter.queue
 
 management:
   server:
