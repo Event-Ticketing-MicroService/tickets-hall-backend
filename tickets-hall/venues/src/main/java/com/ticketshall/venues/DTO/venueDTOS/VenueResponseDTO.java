@@ -19,7 +19,7 @@ public class VenueResponseDTO {
     private String venueAddress;
     private String venuePhone;
     private String venueEmail;
-    private int venueCapacity;
+    private Integer venueCapacity;
     private String venueDescription;
     private String venueCountry;
     private String venueImageUrl;

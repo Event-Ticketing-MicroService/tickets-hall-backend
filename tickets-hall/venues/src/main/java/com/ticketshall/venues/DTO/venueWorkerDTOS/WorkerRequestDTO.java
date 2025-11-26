@@ -1,4 +1,5 @@
 package com.ticketshall.venues.DTO.venueWorkerDTOS;
+import com.ticketshall.venues.validators.ValidPassword;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -16,4 +17,7 @@ public class WorkerRequestDTO {
     @NotBlank(message = "Email cannot be empty")
     @Email
     private String email;
+
+    @ValidPassword
+    private String password;
 }
