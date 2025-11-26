@@ -1,0 +1,71 @@
+server:
+  servlet:
+    context-path: /api
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/events
+    username: postgres
+    password: 123
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
+        implicit-strategy: org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: admin
+    password: admin
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  cache:
+    redis:
+      time-to-live: 3600000
+
+logging:
+  level:
+    org.springframework.cache: TRACE
+
+app:
+  rabbitmq:
+    exchanges:
+      event: events.exchange
+    routing:
+      event-created: event.created
+      event-updated: event.updated
+      event-deleted: event.deleted
+
+cloudinary:
+  cloud-name: ${CLOUDINARY_CLOUD_NAME}
+  api-key: ${CLOUDINARY_API_KEY}
+  api-secret: ${CLOUDINARY_API_SECRET}
+
+management:
+  server:
+    port: 1234
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      group:
+        liveness:
+          include: livenessState
+        readiness:
+          include: readinessState
+      show-details: always
+      validate-group-membership: false

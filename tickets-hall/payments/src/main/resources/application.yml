@@ -33,3 +33,20 @@ app:
 
 server:
   port: 8001
+
+management:
+  server:
+    port: 1234
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      group:
+        liveness:
+          include: livenessState
+        readiness:
+          include: readinessState
+      show-details: always
+      validate-group-membership: false

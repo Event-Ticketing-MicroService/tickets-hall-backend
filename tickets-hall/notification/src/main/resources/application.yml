@@ -74,3 +74,20 @@ app:
       ticketUpdated: notification.ticket.updated.queue
       ticketDeleted: notification.ticket.deleted.queue
       dead-letter: notification.final.dead.letter.queue
+
+management:
+  server:
+    port: 1234
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      group:
+        liveness:
+          include: livenessState
+        readiness:
+          include: readinessState
+      show-details: always
+      validate-group-membership: false

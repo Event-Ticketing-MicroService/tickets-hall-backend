@@ -14,6 +14,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 )
 public interface CustomerClient {
 
-    @PostMapping
+    @PostMapping("/register")
     CustomerResponseDTO addCustomer(@RequestBody CreateCustomerDTO customerDto);
 }
