@@ -26,7 +26,7 @@ public class JwtUtil {
 
     public JwtUtil(JwtConfig jwtConfig) {
         this.jwtConfig = jwtConfig;
-        
+
         this.key = Keys.hmacShaKeyFor(this.jwtConfig.getSecret().getBytes());
     }
 
@@ -47,6 +47,17 @@ public class JwtUtil {
 
         return Jwts.builder()
                 .subject(userId.toString())
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + expiration))
+                .signWith(key)
+                .compact();
+    }
+
+    public String generateRefreshToken(UUID userId) {
+        long expiration = jwtConfig.getRefreshExpiration().toMillis();
+        return Jwts.builder()
+                .subject(userId.toString())
+                .claim("type", "refresh")
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(key)
@@ -107,10 +118,10 @@ public class JwtUtil {
         if (!validateToken(token)) {
             return false;
         }
-        
+
         try {
             String tokenRole = extractRole(token);
-            
+
             return tokenRole != null && tokenRole.equals(requiredRole);
         } catch (Exception e) {
             return false;
