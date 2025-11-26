@@ -31,7 +31,7 @@ public class TicketTypeServiceImpl implements TicketTypeService {
 
     @Override
     public TicketType createTicketType(CreateTicketTypeRequest request) {
-        if(!eventRepository.existsById(request.eventId())) {
+        if (!eventRepository.existsById(request.eventId())) {
             throw new IllegalArgumentException("Event not found: " + request.eventId());
         }
 
@@ -59,11 +59,11 @@ public class TicketTypeServiceImpl implements TicketTypeService {
             for (int i = 0; i < cached.size(); i++) {
                 TicketType type = cached.get(i);
                 if (type.getId().equals(request.id())) {
-                    if(type.getReservationsStartsAtUtc().isBefore(LocalDateTime.now())){
+                    if (type.getReservationsStartsAtUtc().isBefore(LocalDateTime.now())) {
                         throw new IllegalArgumentException("TicketType can't be updated because the reservations already started");
                     }
-                    newAvailableStock = type.getAvailableStock() - (request.stock() - type.getTotalStock());
-                    if(newAvailableStock < 0) {
+                    newAvailableStock = type.getAvailableStock() + (request.stock() - type.getTotalStock());
+                    if (newAvailableStock < 0) {
                         throw new IllegalArgumentException("the new Available Stock can't be negative " + type.getName());
                     }
                     type.setName(request.name());
@@ -78,7 +78,7 @@ public class TicketTypeServiceImpl implements TicketTypeService {
         }
         var type = ticketTypeRepository.findById(request.id())
                 .orElseThrow(() -> new RuntimeException("TicketType not found: " + request.id()));
-        newAvailableStock = type.getAvailableStock() - (request.stock() - type.getTotalStock());
+        newAvailableStock = type.getAvailableStock() + (request.stock() - type.getTotalStock());
         type.setName(request.name());
         type.setPrice(request.price());
         type.setTotalStock(request.stock());
@@ -93,7 +93,7 @@ public class TicketTypeServiceImpl implements TicketTypeService {
     public boolean deleteTicketType(UUID ticketTypeId) {
         var dbType = ticketTypeRepository.findById(ticketTypeId)
                 .orElseThrow(() -> new TicketTypeNotFoundException("TicketType not found: " + ticketTypeId));
-        if(dbType.getReservationsStartsAtUtc().isBefore(LocalDateTime.now())){
+        if (dbType.getReservationsStartsAtUtc().isBefore(LocalDateTime.now())) {
             throw new IllegalArgumentException("TicketType can't be deleted because the reservations already started");
         }
 
@@ -122,7 +122,7 @@ public class TicketTypeServiceImpl implements TicketTypeService {
         }
 
         List<TicketType> ticketTypes = ticketTypeRepository.getTicketTypesByEventId(eventId);
-        if(!ticketTypes.isEmpty()) {
+        if (!ticketTypes.isEmpty()) {
             cachedList.addAll(ticketTypes);
         }
 
