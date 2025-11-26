@@ -27,7 +27,7 @@ spring:
       timeout: 2000ms
 
 jwt:
-    secret: "Y9xk8mVw4pT2orangeZr7NsE1uL0aB5yH8dG4tX2cP9mW1vS6eJ3kQ0rU8zC7nF2"
+    secret: Y9xk8mVw4pT2orangeZr7NsE1uL0aB5yH8dG4tX2cP9mW1vS6eJ3kQ0rU8zC7nF2
     access-token-expiration: 15m
     refresh-token-expiration: 7d
 
