@@ -17,5 +17,6 @@ import lombok.Setter;
 public class JwtConfig {
 
     private String secret;
-    private Duration expiration;
+    private Duration accessTokenExpiration;
+    private Duration refreshTokenExpiration;
 }
