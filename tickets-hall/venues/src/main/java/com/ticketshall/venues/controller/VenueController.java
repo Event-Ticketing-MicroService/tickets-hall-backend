@@ -8,6 +8,7 @@ import com.ticketshall.venues.DTO.venueWorkerDTOS.WorkerRequestDTO;
 import com.ticketshall.venues.DTO.venueWorkerDTOS.WorkerResponseDTO;
 import com.ticketshall.venues.service.VenueService;
 import com.ticketshall.venues.service.VenueWorkerService;
+import com.ticketshall.venues.validators.ImageValidator;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -44,6 +45,8 @@ public class VenueController {
             @RequestPart("data") @Validated VenueRequestDTO venueRequestDTO,
             @RequestPart("image") MultipartFile image
     ){
+        ImageValidator imageValidator = new ImageValidator(image, true);
+        imageValidator.validate();
         return ResponseEntity.ok(venueService.createVenue(venueRequestDTO, image));
     }
 
@@ -72,7 +75,7 @@ public class VenueController {
 
     @Operation(summary = "Added workers to Venue")
     @PostMapping("/{id}/workers")
-    public ResponseEntity<List<WorkerResponseDTO>> addWorkers(@PathVariable Long id, @RequestBody @Validated List<WorkerRequestDTO> workerRequestDTO){
+    public ResponseEntity<List<WorkerResponseDTO>> addWorkers(@RequestHeader("X-User-ID") Long id, @RequestBody @Validated List<WorkerRequestDTO> workerRequestDTO){
         return ResponseEntity.ok().body(venueWorkerService.addVenueWorker(workerRequestDTO,id));
     }
 
