@@ -6,7 +6,6 @@ import com.ticketshall.auth.Enums.Role;
 import com.ticketshall.auth.Enums.UserType;
 import com.ticketshall.auth.config.JwtUtil;
 import com.ticketshall.auth.model.UserCredentials;
-import com.ticketshall.auth.repository.UserCredentialsRepo;
 import com.ticketshall.auth.service.AuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,9 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -37,13 +34,10 @@ class AuthControllerTest {
     private AuthenticationManager authenticationManager;
 
     @Mock
-    private UserCredentialsRepo userCredentialsRepo;
+    private AuthService authService;
 
     @InjectMocks
     private AuthController authController;
-
-    @Mock
-    private AuthService authService;
 
     @BeforeEach
     void setUp() {
@@ -70,9 +64,12 @@ class AuthControllerTest {
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
 
-        assertNotNull(response.getHeaders().get(HttpHeaders.SET_COOKIE));
-        assertTrue(response.getHeaders().get(HttpHeaders.SET_COOKIE).toString().contains("refreshToken=refresh-token"));
-        assertFalse(response.getHeaders().get(HttpHeaders.SET_COOKIE).toString().contains("accessToken=access-token"));
+
+        String cookies = response.getHeaders().getFirst(HttpHeaders.SET_COOKIE);
+        assertNotNull(cookies);
+        assertTrue(cookies.contains("refreshToken=refresh-token"));
+        assertFalse(cookies.contains("accessToken=access-token"));
+
 
         Map<String, Object> body = (Map<String, Object>) response.getBody();
         assertNotNull(body);
@@ -112,20 +109,17 @@ class AuthControllerTest {
     void testRefreshTokenEndpoint() {
         String refreshToken = "valid-refresh-token";
 
-        Map<String, String> requestBody = new HashMap<>();
-        requestBody.put("refreshToken", refreshToken);
-
-        RefreshResponseDTO expectedResponse =
+        RefreshResponseDTO expected =
                 new RefreshResponseDTO("new-access-token", "new-refresh-token");
 
-        when(authService.refreshToken(refreshToken)).thenReturn(expectedResponse);
+        when(authService.refreshToken(refreshToken)).thenReturn(expected);
 
-        ResponseEntity<RefreshResponseDTO> response = authController.refreshToken(requestBody);
+        ResponseEntity<RefreshResponseDTO> response =
+                authController.refreshToken(Map.of("refreshToken", refreshToken));
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("new-access-token", response.getBody().token());
     }
-
 
     @Test
     void testRefreshTokenEndpointWithInvalidToken() {
