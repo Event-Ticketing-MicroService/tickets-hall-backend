@@ -25,7 +25,28 @@ spring:
       host: localhost
       port: 6379
       timeout: 2000ms
-  
+
+jwt:
+    secret: "Y9xk8mVw4pT2orangeZr7NsE1uL0aB5yH8dG4tX2cP9mW1vS6eJ3kQ0rU8zC7nF2"
+    access-token-expiration: 15m
+    refresh-token-expiration: 7d
+
+resilience4j:
+  retry:
+    instances:
+      venueServiceRetry:
+        max-attempts: 3
+        wait-duration: 500ms
+        retry-exceptions:
+          - com.ticketshall.auth.exceptions_handlers.ExternalServiceException
+          - feign.RetryableException
+      customerServiceRetry:
+        max-attempts: 3
+        wait-duration: 500ms
+        retry-exceptions:
+          - com.ticketshall.auth.exceptions_handlers.ExternalServiceException
+          - feign.RetryableException
+
   # RabbitMQ Configuration
   rabbitmq:
     host: localhost
@@ -47,32 +68,13 @@ spring:
 app:
   rabbitmq:
     exchanges:
-      user: user.exchange
-      event: event.exchange
-      ticket: ticket.exchange
+      worker: worker.exchange
       dead-letter: deadLetter.exchange
     routing:
-      userCreated: user.created
-      userUpdated: user.updated
-      userDeleted: user.deleted
-      eventCreated: event.created
-      eventUpdated: event.updated
-      eventDeleted: event.deleted
-      ticketCreated: ticket.created
-      ticketUpdated: ticket.updated
-      ticketDeleted: ticket.deleted
-      dead-letter: dead.letter
+      workerCreated: worker.created
+      workerUpdated: worker.updated
+      workerDeleted: worker.deleted
     queues:
-      userCreated: user.created.queue
-      userUpdated: user.updated.queue
-      userDeleted: user.deleted.queue
-      eventCreated: event.created.queue
-      eventUpdated: event.updated.queue
-      eventDeleted: event.deleted.queue
-      ticketCreated: ticket.created.queue
-      ticketUpdated: ticket.updated.queue
-      ticketDeleted: ticket.deleted.queue
-      dead-letter: final.dead.letter.queue
-jwt:
-    secret: Y9xk8mVw4pT2orangeZr7NsE1uL0aB5yH8dG4tX2cP9mW1vS6eJ3kQ0rU8zC7nF2
-    expiration: 1h
+      workerCreated: auth.worker.created.queue
+      workerUpdated: auth.worker.updated.queue
+      workerDeleted: auth.worker.deleted.queue
