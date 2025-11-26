@@ -9,6 +9,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Map;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -32,8 +34,8 @@ public class RegisterRequestDTO {
             regexp = "^(CUSTOMER|VENUE|WORKER)$",
             message = "User type must be CUSTOMER, VENUE, or WORKER"
     )
+    @NotBlank(message = "User type must be specified")
     private String userType;
 
-    @NotBlank(message = "External ID is required")
-    private String externalId;
+    private Map<String, Object> details;
 }
