@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
 
   attendance-db:
@@ -108,7 +106,7 @@ services:
       - "8081:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/postgres
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://attendance-db:5432/postgres
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=postgres
       - SPRING_RABBITMQ_HOST=rabbitmq
@@ -131,7 +129,7 @@ services:
       - "8082:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/postgres
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://customers-db:5432/postgres
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=postgres
       - SPRING_RABBITMQ_HOST=rabbitmq
@@ -154,13 +152,18 @@ services:
       - "8083:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/postgres
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://events-db:5432/postgres
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=postgres
       - SPRING_RABBITMQ_HOST=rabbitmq
       - SPRING_RABBITMQ_PORT=5672
       - SPRING_RABBITMQ_USERNAME=admin
       - SPRING_RABBITMQ_PASSWORD=admin
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
+      - CLOUDINARY_CLOUD_NAME=dlsigg8au
+      - CLOUDINARY_API_KEY=618189661629714
+      - CLOUDINARY_API_SECRET=Qp93RZhjuZEzWRjoo6SLlBaUhXs
     depends_on:
       - events-db
       - redis
@@ -177,7 +180,7 @@ services:
       - "8084:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/postgres
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://notification-db:5432/postgres
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=postgres
       - SPRING_RABBITMQ_HOST=rabbitmq
@@ -202,7 +205,7 @@ services:
       - "8085:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/postgres
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://payments-db:5432/postgres
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=postgres
       - SPRING_RABBITMQ_HOST=rabbitmq
@@ -222,16 +225,18 @@ services:
       context: ./tickets-hall
       dockerfile: tickets/Dockerfile
     ports:
-      - "8086:8080"
+      - "8086:5000"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/postgres
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://tickets-db:5432/postgres
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=postgres
       - SPRING_RABBITMQ_HOST=rabbitmq
       - SPRING_RABBITMQ_PORT=5672
       - SPRING_RABBITMQ_USERNAME=admin
       - SPRING_RABBITMQ_PASSWORD=admin
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
     depends_on:
       - tickets-db
       - redis
@@ -248,14 +253,54 @@ services:
       - "8087:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/postgres
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://venues-db:5432/postgres
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=postgres
+      - CLOUDINARY_CLOUD_NAME=dlsigg8au
+      - CLOUDINARY_API_KEY=618189661629714
+      - CLOUDINARY_API_SECRET=Qp93RZhjuZEzWRjoo6SLlBaUhXs
     depends_on:
       - venues-db
     networks:
       - tickets-hall-network
     restart: unless-stopped
+
+  auth:
+    build:
+      context: ./tickets-hall
+      dockerfile: auth/Dockerfile
+    ports:
+      - "8080:5000"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://auth-db:5432/postgres
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=admin
+      - SPRING_RABBITMQ_PASSWORD=admin
+    depends_on:
+      - auth-db
+      - redis
+      - rabbitmq
+    networks:
+      - tickets-hall-network
+    restart: unless-stopped
+
+  auth-db:
+    image: postgres:17.6
+    container_name: auth_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: auth
+    ports:
+      - "5440:5432"
+    volumes:
+      - auth-data:/var/lib/postgresql/data
+    networks:
+      - tickets-hall-network
 
   redis:
     container_name: tickets-hall_redis
@@ -283,6 +328,15 @@ services:
       - tickets-hall-network
     restart: unless-stopped
 
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: mailpit
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - tickets-hall-network
+
 volumes:
   attendance-data:
   customers-data:
@@ -291,6 +345,7 @@ volumes:
   payments-data:
   tickets-data:
   venues-data:
+  auth-data:
   redis_data:
   rabbitmq_data:
 
