@@ -10,12 +10,13 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
 
 @FeignClient(
-        name = "venue-service",
-        url = "http://venue-service/api/venues",
+        name = "venues-service",
+        url = "http://venues-service/api/venues",
         configuration = FeignConfig.class
 )
 public interface VenueClient {
-    @PostMapping(value = "",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+
+    @PostMapping(value = "", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     VenueResponseDTO createVenue(
             @RequestPart("data") VenueRequestDTO venueRequestDTO,
             @RequestPart("image") MultipartFile image

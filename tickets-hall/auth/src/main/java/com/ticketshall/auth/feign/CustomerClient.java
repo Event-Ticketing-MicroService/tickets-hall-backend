@@ -8,8 +8,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 @FeignClient(
-        name = "customer-service",
-        url = "http://customer-service/api/customers",
+        name = "customers-service",
+        url = "http://customers-service/api/customers",
         configuration = FeignConfig.class
 )
 public interface CustomerClient {
